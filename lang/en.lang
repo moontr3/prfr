@@ -1,0 +1,32 @@
+english
+🇺🇸
+
+!CUR=🔆
+!@=<code>@</code>
+
+dy=dy
+hr=hr
+min=min
+sec=sec
+
+jan=jan
+feb=feb
+mar=mar
+apr=apr
+may=may
+jun=jun
+jul=jul
+aug=aug
+sep=sep
+oct=oct
+nov=nov
+dec=dec
+
+general_back=⬅ back
+general_loading=[@] <i>loading...</i>
+
+me_stats=\
+[@] <i>your profile:</i>\n\
+\n\
+balance: <code>{balance} [CUR]</code>\n\
+started playing: <b>{time}ago</b>
