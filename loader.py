@@ -21,4 +21,4 @@ bot = Bot(TOKEN,
 )
 dp = Dispatcher()
 
-mg = api.Manager('users.json', 'data.json', 'lang\\')
+mg = api.Manager('users.json', 'data.json', 'lang\\', 'map.json')

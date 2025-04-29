@@ -4,3 +4,4 @@ from .texts import *
 from .keyboards import *
 from .other import *
 from .start import *
+from .remote import *
