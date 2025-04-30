@@ -3,6 +3,7 @@ import asyncio
 import random
 import time
 from typing import *
+from log import *
 
 from aiogram import F, types
 from aiogram.filters.command import Command, CommandStart, CommandObject
@@ -23,7 +24,6 @@ from .keyboards import *
 
 @dp.chosen_inline_result()
 async def inline_result(q: types.ChosenInlineResult):
-    print(q.result_id)
     if not q.result_id.startswith('namechange:'): return
 
     newname = q.result_id.removeprefix('namechange:')[:MAX_NAME_LENGTH]
@@ -48,11 +48,12 @@ async def inline(q: types.InlineQuery):
     else:
         
         await q.answer([types.InlineQueryResultArticle(id='discard',
-            title=l.f('inline_name_change_title'),
+            title=l.f('inline_unknown_command'),
             input_message_content=types.InputTextMessageContent(
                 message_text=l.f(f'inline_discard')
             )
         )], cache_time=5, is_personal=True)
+        return
 
     # name change query
     if key == 'name':
@@ -93,31 +94,51 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
     '''
     Returns the text of the message.
     '''
-    # minimap
-    data = mg.map.get_rect_around(user.pos, 4)
     text = ''
-    topleft = [user.pos[0]-4, user.pos[1]-4]
-    overlay = mg.get_player_overlay(topleft, (9,9))
 
-    for y, row in enumerate(data):
-        outrow = ''
+    # minimap
+    if remote.menu in [None]:
+        data = mg.map.get_rect_around(user.pos, 4)
+        topleft = [user.pos[0]-4, user.pos[1]-4]
+        overlay = mg.get_player_overlay(topleft, (9,9))
 
-        for x, i in enumerate(row):
-            if overlay[y][x] == None:
-                outrow += mg.obj.get(i).emoji
-            else:
-                outrow += overlay[y][x]
-    
-        text += f'{outrow}\n'
+        for y, row in enumerate(data):
+            outrow = ''
 
-    text = text[:-1]
+            for x, i in enumerate(row):
+                if overlay[y][x] == None:
+                    outrow += mg.obj.get(i).emoji
+                else:
+                    outrow += overlay[y][x]
+        
+            text += f'{outrow}\n'
+
+        text = text[:-1]
+
+        # stats
+        text += '\n\n'+l.f('remote_stats_text', x=user.pos[0], y=user.pos[1])
+
+        # chat
+        text += '\n'
+        for i in remote.chat[-CHAT_HISTORY:]:
+            text += f'\n{i}'
+
+    # chat
+    if remote.menu == 'chat':
+        text += l.f('remote_chat_title')+'\n\n'
+
+        if len(remote.chat) == 0:
+            text += l.f('remote_chat_empty')
+
+        for i in remote.chat[-CHAT_HISTORY_MENU:]:
+            text += f'{i}\n'
 
     # remote timeout warning
     if time.time()-remote.last_activity > MAX_AFK_TIME_SECONDS-15:
-        text += '\n\n'+l.f('remote_afk_warning', left=15)
+        text += '\n'+l.f('remote_afk_warning', left=15)
 
     elif time.time()-remote.last_activity > MAX_AFK_TIME_SECONDS-30:
-        text += '\n\n'+l.f('remote_afk_warning', left=30)
+        text += '\n'+l.f('remote_afk_warning', left=30)
 
     return text
 
@@ -129,36 +150,46 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
     kb = InlineKeyboardBuilder()
 
     # walking buttons
-    data = mg.map.get_rect_around(user.pos, 2)
-    topleft = [-2,-2]
+    if remote.menu == None:
+        data = mg.map.get_rect_around(user.pos, 2)
+        topleft = [-2,-2]
 
-    for y, row in enumerate(data):
-        buttons = []
-        y = topleft[1]+y
+        for y, row in enumerate(data):
+            buttons = []
+            y = topleft[1]+y
 
-        for x, item in enumerate(row):
-            x = topleft[0]+x
+            for x, item in enumerate(row):
+                x = topleft[0]+x
 
-            if x == 0 and y == 0:
-                text = user.avatar
-            elif user.remote:
-                text = REMOTE_BUTTONS[y+2][x+2]
-            else:
-                text = mg.obj.get(item).button_text
+                if x == 0 and y == 0:
+                    text = user.avatar
+                elif user.remote:
+                    text = REMOTE_BUTTONS[y+2][x+2]
+                else:
+                    text = mg.obj.get(item).button_text
 
-            buttons.append(types.InlineKeyboardButton(
-                text=text, callback_data=f'move:{x}:{y}'
-            ))
+                buttons.append(types.InlineKeyboardButton(
+                    text=text, callback_data=f'move:{x}:{y}'
+                ))
 
-        kb.row(*buttons)
+            kb.row(*buttons)
 
-    # options buttons
-    kb.row(types.InlineKeyboardButton(
-        text=l.f(f'button_remote_type_{user.remote}'), callback_data='remotetype'
-    ))
-    kb.add(types.InlineKeyboardButton(
-        text=l.f('button_remote_logout'), callback_data='logout'
-    ))
+        # options buttons
+        kb.row(types.InlineKeyboardButton(
+            text=l.f('button_remote_chat'), callback_data='menu:chat'
+        ))
+        kb.add(types.InlineKeyboardButton(
+            text=l.f(f'button_remote_type_{user.remote}'), callback_data='remotetype'
+        ))
+        kb.add(types.InlineKeyboardButton(
+            text=l.f('button_remote_logout'), callback_data='logout'
+        ))
+
+    # back button
+    else:
+        kb.add(types.InlineKeyboardButton(
+            text=l.f('general_back'), callback_data='menu:None'
+        ))
 
     return kb
 
@@ -175,6 +206,22 @@ async def change_remote_type(call: types.callback_query):
 
     # changing type
     mg.change_remote_type(user.id)
+    await call.answer()
+
+
+@dp.callback_query(F.data.startswith('menu:'))
+async def change_remote_type(call: types.callback_query):
+    user = mg.get_user(call.from_user)
+    l = mg.get_locale(user.lang)
+    args = call.data.split(':')
+
+    out = mg.check_remote(user.id)
+    if out != True: return await call.answer(l.f(out))
+
+    # changing menu
+    menu = args[1] if args[1] != 'None' else None
+    remote = mg.remotes[call.from_user.id]
+    remote.menu = menu
     await call.answer()
 
 
@@ -245,11 +292,13 @@ async def run_remote_cycle(userid: int):
             try:
                 await msg.edit_text(text=newtext, reply_markup=keyboard.as_markup())
             except Exception as e:
-                print(e)
+                log(e, level=ERROR)
 
         remote.performed_action = False
 
     # deleting remote message
+    mg.broadcast_user('chat_user_left', userid)
+    log(f'{user.game_name} ({user.id}) logged out...')
     await msg.delete()
 
 
@@ -282,8 +331,10 @@ async def remote(msg: types.Message):
     # starting remote cycle
     await msg.delete()
     botmsg = await bot.send_message(msg.chat.id, l.f('general_loading'))
+    log(f'{user.game_name} ({user.id}) logged in!')
 
     mg.remotes[msg.from_user.id] = api.Remote(botmsg, msg.from_user.id)
+    mg.broadcast_user('chat_user_joined', msg.from_user.id)
     await run_remote_cycle(msg.from_user.id)
     del mg.remotes[msg.from_user.id]
 
@@ -296,4 +347,32 @@ async def status(msg: types.Message):
     user = mg.get_user(msg.from_user)
     l = mg.get_locale(user.lang)
 
-    await msg.reply(l.f('status_text', online=len(mg.remotes)))
+    text = l.f('status_text')+'\n\n'
+
+    if len(mg.remotes) == 0:
+        text += l.f('status_desc_no_players_online')
+    else:
+        text += l.f('status_desc_players_online', online=len(mg.remotes))
+
+        for i in mg.remotes.values():
+            user = mg.get_user(i.user_id)
+            text += f'\n•  {user.display_name}'
+
+    await msg.reply(text)
+
+
+@dp.message()
+async def ingamechat(msg: types.Message):
+    '''
+    ingame chat.
+    '''
+    user = mg.get_user(msg.from_user)
+    l = mg.get_locale(user.lang)
+
+    if msg.text == None or len(msg.text) == 0: return
+    if msg.text.startswith('/'): return
+    if msg.from_user.id not in mg.remotes: return
+
+    await msg.delete()
+    if msg.text.startswith('φ'): return
+    mg.send_to_chat(l, user.id, msg.text)

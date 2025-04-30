@@ -2,31 +2,57 @@
     "obj": {
         "pine": {
             "emoji": "🌲",
-            "color": [53, 105, 42]
+            "color": [53, 105, 42],
+            "drops": [
+                {
+                    "item": "log",
+                    "amount": [1,3]
+                },
+                {
+                    "item": "leaves",
+                    "amount": [1,5],
+                    "chance": 0.8
+                }
+            ],
+            "collision": true
         },
         "tree": {
             "emoji": "🌳",
-            "color": [58, 163, 36]
+            "color": [58, 163, 36],
+            "collision": true
         },
         "seed": {
             "emoji": "🌱",
             "color": [101, 214, 77]
         },
+        "log": {
+            "emoji": "🪵",
+            "color": [54, 23, 10],
+            "collision": true
+        },
+        "leaves": {
+            "emoji": "🍂",
+            "color": [189, 124, 58]
+        },
         "water1": {
             "emoji": "🔹",
-            "color": [15, 39, 77]
+            "color": [15, 39, 77],
+            "fluid": true
         },
         "water2": {
             "emoji": "🔷",
-            "color": [28, 68, 133]
+            "color": [28, 68, 133],
+            "fluid": true
         },
         "water3": {
             "emoji": "🔵",
-            "color": [36, 94, 189]
+            "color": [36, 94, 189],
+            "fluid": true
         },
         "water4": {
             "emoji": "🟦",
-            "color": [54, 130, 255]
+            "color": [54, 130, 255],
+            "fluid": true
         }
     }
 }

@@ -9,6 +9,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from config import *
 import api
 import utils
+from log import *
 
 from loader import dp, mg, bot
 
@@ -28,9 +29,9 @@ async def reindex_names(msg: types.Message):
             try:
                 user = await bot.get_chat(v.id)
             except:
-                print(f'! {v.id} - error')
+                log(f'{v.id}', level=ERROR)
             else:
-                print(f'  {v.id} - success - {user.first_name}')
+                log(f'{v.id} - {user.first_name}', level=SUCCESS)
                 v.name = user.first_name
 
     mg.commit_db()

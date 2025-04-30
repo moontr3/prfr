@@ -4,3 +4,4 @@ users.json
 *.ignore
 map
 map.json
+log.txt

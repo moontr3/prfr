@@ -6,7 +6,8 @@ from config import *
 from loader import bot, dp, mg
 import micros
 import asyncio
+from log import *
 
 
-print('Started polling...')
+log('Started polling...')
 asyncio.run(dp.start_polling(bot))

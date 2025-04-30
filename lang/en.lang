@@ -46,9 +46,9 @@ Started playing: <b>{time} ago</b>
 
 ##### remotes #####
 
-status_text=[@] <i>Server status:</i>\n\
-\n\
-Players online: <code>{online}</code>
+status_text=[@] <i>Server status:</i>
+status_desc_players_online=Online players (<code>{online}</code>):
+status_desc_no_players_online=<i>No one is playing right now...</i>
 
 err_remote_not_private=[x] You can only login in bot's DMs!
 
@@ -69,11 +69,24 @@ callback_err_remote_move_too_big=❌ This move is too big!
 
 remote_afk_warning=⌛ You will be logged off in <b>{left}s</b> due to AFKing!
 
-button_remote_logout=🚪 Logout
-button_remote_type_True=🔘 Arrows
+remote_chat_title=💬 <i>Chat history</i>
+remote_chat_empty=Nothing here
+
+button_remote_logout=🚪 Leave
+button_remote_type_True=🔘 Remote
 button_remote_type_False=🏞 World
+button_remote_chat=💬 Chat
+
+remote_stats_text=Position: <code>{x}</code>, <code>{y}</code>
+
+err_chat_message_too_long=❌ Maximum message length - {max}!
+err_chat_message_timeout=❌ Only one message every second!
+chat_user_joined=🚪 <i>{user} logged in!</i>
+chat_user_left=🚪 <i>{user} logged out...</i>
 
 ##### name changer #####
+
+inline_unknown_command=❌ ...
 
 inline_name_change_title=👇 Enter your new name below...
 inline_name_change_entered_title=👇 Set your name as {name}?

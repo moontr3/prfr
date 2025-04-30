@@ -6,7 +6,7 @@ from config import *
 
 
 def demarkup(string: str) -> str:
-    return string.replace('<','\\<').replace('>', '\\>')
+    return string.replace('<','').replace('>', '')
 
 
 def int_to_emoji(number: int) -> str:

@@ -68,7 +68,8 @@ print('''
 Use LMB to draw
 Use LMB + Space to erase
 Use S (or close the app) to save
-Use Mouse wheel to change object
+Use Shift + Mouse wheel to change object
+Use Mouse wheel to change pen size
 Use Ctrl + Mouse wheel to zoom
 Use 1, 2 to change tools
 Use Alt + Mouse wheel to change spray speed

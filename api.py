@@ -11,7 +11,7 @@ import time
 from aiogram.types import User as AiogramUser
 from aiogram.types import Message as AiogramMessage
 import random
-
+from log import *
 import utils
 
 # locale
@@ -107,6 +107,14 @@ class User:
         Returns the player's avatar.
         '''
         return '👶'
+
+
+    @property
+    def display_name(self) -> str:
+        '''
+        Returns the player's name to display in lists etc.
+        '''
+        return f'{self.avatar} {self.game_name}'
 
 
     def to_dict(self) -> dict:
@@ -220,6 +228,9 @@ class Object:
         self.key: str = key
         self.emoji: str = data.get('emoji', '▪')
         self.color: Tuple[int,int,int] = data.get('color', (0,0,0))
+        self.item_emoji: str = data.get('item_emoji', self.emoji)
+        self.fluid: bool = data.get('fluid', False)
+        self.collision: bool = data.get('collision', False)
 
         self.air: bool = isair
         self.button_text: str = self.emoji if not isair else ' '
@@ -259,6 +270,9 @@ class Remote:
         self.running: bool = True # is the remote running
         self.performed_action: bool = False # was an action performed
         self.changed: bool = True # whether to edit the remote's message or not
+        self.chat: List[str] = [] # chat history
+        self.last_message: float = 0
+        self.menu: str | None = None
 
 
     def update_last_activity(self):
@@ -426,6 +440,7 @@ class Manager:
 
     def set_locale(self, id:int, key:str):
         user = self.get_user(id)
+        log(f'{user.game_name} ({user.id}) changed language to {key}')
         user.lang = key
         self.commit()
 
@@ -490,6 +505,7 @@ class Manager:
 
     def change_game_name(self, id:int, name:str):
         user = self.get_user(id)
+        log(f'{user.game_name} ({user.id}) changed name to {name}')
         user.game_name = name
         self.commit()
     
@@ -503,6 +519,42 @@ class Manager:
 
         self.commit()
     
+
+    def broadcast_user(self, key: str, user_id: int):
+        user = self.get_user(user_id)
+        
+        # broadcasting
+        for i in self.remotes.values():
+            if i.user_id == user_id: continue
+
+            currentuser = self.get_user(i.user_id)
+            l = self.get_locale(currentuser.lang)
+            i.chat.append(l.f(key, user=user.game_name))
+    
+
+    def send_to_chat(self, l:Locale, id:str, message:str):
+        if id not in self.remotes: return
+        remote = self.remotes[id]
+        
+        # checking message
+        if len(message) > MAX_CHAT_LENGTH:
+            remote.chat.append(l.f('err_chat_message_too_long', max=MAX_CHAT_LENGTH))
+            return
+        
+        if time.time()-remote.last_message < CHAT_TIMEOUT:
+            remote.chat.append(l.f('err_chat_message_timeout'))
+            return
+        
+        # broadcasting
+        user = self.get_user(id)
+        remote.last_message = time.time()
+        message = utils.demarkup(message)
+        log(f'{user.game_name} ({user.id}) - {message}', level=CHAT)
+
+        for i in self.remotes.values():
+            em = '🗨' if i.user_id == id else '💬'
+            i.chat.append(f'{user.game_name} {em} {message}')
+
 
     def move(self, id:int, offsetx:int, offsety:int):
         user = self.get_user(id)

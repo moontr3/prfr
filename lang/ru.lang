@@ -46,9 +46,9 @@ me_stats=\
 
 ##### remotes #####
 
-status_text=[@] <i>Статус сервера:</i>\n\
-\n\
-Игроков онлайн: <code>{online}</code>
+status_text=[@] <i>Статус сервера:</i>
+status_desc_players_online=Игроки онлайн (<code>{online}</code>):
+status_desc_no_players_online=<i>Сейчас никто не играет...</i>
 
 err_remote_not_private=[x] Входить можно только в ЛС с ботом!
 
@@ -69,11 +69,24 @@ callback_err_remote_move_too_big=❌ Этот шаг слишком большо
 
 remote_afk_warning=⌛ Вы автоматически выйдете через <b>{left}с</b> за AFK!
 
+remote_chat_title=💬 <i>История чата</i>
+remote_chat_empty=Тут ничего нет
+
 button_remote_logout=🚪 Выйти
-button_remote_type_True=🔘 Стрелки
+button_remote_type_True=🔘 Пульт
 button_remote_type_False=🏞 Мир
+button_remote_chat=💬 Чат
+
+remote_stats_text=Позиция: <code>{x}</code>, <code>{y}</code>
+
+err_chat_message_too_long=❌ Максимальная длина сообщения - {max}!
+err_chat_message_timeout=❌ Максимум одно сообщение в секунду!
+chat_user_joined=🚪 <i>{user} присоединился!</i>
+chat_user_left=🚪 <i>{user} вышел...</i>
 
 ##### name changer #####
+
+inline_unknown_command=❌ ...
 
 inline_name_change_title=👇 Введи свое новое имя ниже...
 inline_name_change_entered_title=👇 Установить имя {name}?
