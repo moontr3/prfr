@@ -206,7 +206,7 @@ while running:
         scaled = pg.transform.scale_by(scr, zoom)
         changed = False
 
-    window.blit(scaled)
+    window.blit(scaled, (0,0))
 
     rect = pg.Rect(
         (tile[0]-pensize+1)*zoom+int(offset[0]/zoom)*zoom,

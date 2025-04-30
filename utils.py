@@ -62,7 +62,7 @@ def time(l, num:int,
     if out == '':
         out = f'{int(num)} {l.f("sec")} '
 
-    return out
+    return out[:-1]
 
 def day(l, timestamp:float) -> str:
     '''

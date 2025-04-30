@@ -1,32 +1,51 @@
-english
+English
 🇺🇸
 
+##### constants and general values #####
+
 !CUR=🔆
-!@=<code>@</code>
+!@=<code>φ</code>
+!x=<code>X</code>
 
 dy=dy
 hr=hr
 min=min
 sec=sec
 
-jan=jan
-feb=feb
-mar=mar
-apr=apr
-may=may
-jun=jun
-jul=jul
-aug=aug
-sep=sep
-oct=oct
-nov=nov
-dec=dec
+jan=Jan
+feb=Feb
+mar=Mar
+apr=Apr
+may=May
+jun=Jun
+jul=Jul
+aug=Aug
+sep=Sep
+oct=Oct
+nov=Nov
+dec=Dec
 
-general_back=⬅ back
-general_loading=[@] <i>loading...</i>
+general_back=⬅ Back
+general_loading=[@] <i>Loading...</i>
+
+welcome=\
+<b>[@] Welcome to Project Freeroam!</b>\n\
+\n\
+This is a Telegram open-world sandbox game.\n\
+Build, wander around, gather resources, meet people - do anything you want!\n\
+\n\
+Use <b>/login</b> to start the game.
 
 me_stats=\
-[@] <i>your profile:</i>\n\
+[@] <i>Your profile:</i>\n\
 \n\
-balance: <code>{balance} [CUR]</code>\n\
-started playing: <b>{time}ago</b>
+Balance: <code>{balance} [CUR]</code>\n\
+Started playing: <b>{time} ago</b>
+
+##### remotes #####
+
+err_remote_not_private=[x] You can only login in bot's DMs!
+
+err_remote_exists=[x] You are already logged in!\n\
+Use <b>/logout</b> to end the session.\n\
+Sessions expire automatically after 5 minutes of inactivity.

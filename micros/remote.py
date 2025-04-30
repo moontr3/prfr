@@ -1,4 +1,5 @@
 
+import asyncio
 import random
 import time
 from typing import *
@@ -22,18 +23,36 @@ from .keyboards import *
 @dp.message(Command('login'))
 async def remote(msg: types.Message):
     '''
-    shows map around player.
+    starts a remote.
     '''
     user = mg.get_user(msg.from_user)
     l = mg.get_locale(user.lang)
 
-    pos = [user.pos[0]-7, user.pos[1]-7]
-    data = mg.map.get_rect(pos, (15,15))
+    if msg.chat.type != 'private':
+        await msg.reply(l.f('err_remote_not_private'))
+        return
+    elif user.id in mg.remotes:
+        await msg.reply(l.f('err_remote_exists'))
+        return
+    
+    # mg.start_remote(user.id)
 
-    text = ''
+    await msg.reply(l.f('general_loading'))
 
-    for row in data:
-        text += ''.join([mg.obj.get(i).emoji for i in row])
-        text += '\n'
 
-    await msg.reply(text)
+@dp.message(Command('a'))
+async def a(msg: types.Message):
+    '''
+    a.
+    '''
+    user = mg.get_user(msg.from_user)
+    l = mg.get_locale(user.lang)
+
+    msg = await msg.reply('0')
+
+    for i in range(65):
+        try:
+            await msg.edit_text(str(i+1))
+            await asyncio.sleep(0.8)
+        except Exception as e:
+            print(e)

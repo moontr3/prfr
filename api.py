@@ -55,6 +55,9 @@ class Locale:
             if i == '':
                 continue
 
+            if i.startswith('#'):
+                continue
+
             if i.startswith('!'):
                 self.const[i.split('=')[0][1:]] = '='.join(i.split('=')[1:])
                 continue
@@ -216,6 +219,16 @@ class ObjectLib:
             return self.data[key]
         
         return Object(None, {}, True)
+    
+
+
+# remotes
+
+class Remote:
+    def __init__(self, chat_id: int, msg_id: int, user_id: int):
+        '''
+        Remote.
+        '''
 
 
 # main manager
@@ -230,6 +243,7 @@ class Manager:
         self.locale_dir = locale_dir # path to locale directory
         self.committing: bool = False
         self.map = Map(map_data)
+        self.remotes: Dict[int, Remote] = {}
 
         self.reload_db()
 
@@ -303,7 +317,7 @@ class Manager:
         self.locales: Dict[str, Locale] = {}
 
         for i in glob.glob(self.locale_dir+'*.lang'):
-            key = i.split('\\')[-1].split('.')[0]
+            key = i.replace('\\','/').split('/')[-1].split('.')[0]
             self.locales[key] = Locale(i)
 
         # checking if database exists
