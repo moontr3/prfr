@@ -5,6 +5,16 @@ import time as stime
 from config import *
 
 
+def demarkup(string: str) -> str:
+    return string.replace('<','\\<').replace('>', '\\>')
+
+
+def int_to_emoji(number: int) -> str:
+    if number > 10:
+        return '🔢'
+    return ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','🔢'][number]
+
+
 def to_superscript(string:str):
     string = str(string)
     replace_from = 'ABDEGHIJKLMNOPRTUVWabcdefghijklmnoprstuvwxyz+-=()0123456789.'

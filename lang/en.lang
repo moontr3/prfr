@@ -28,6 +28,8 @@ dec=Dec
 general_back=⬅ Back
 general_loading=[@] <i>Loading...</i>
 
+inline_discard=[x] <i>No need to press here!</i>
+
 welcome=\
 <b>[@] Welcome to Project Freeroam!</b>\n\
 \n\
@@ -44,8 +46,38 @@ Started playing: <b>{time} ago</b>
 
 ##### remotes #####
 
+status_text=[@] <i>Server status:</i>\n\
+\n\
+Players online: <code>{online}</code>
+
 err_remote_not_private=[x] You can only login in bot's DMs!
 
 err_remote_exists=[x] You are already logged in!\n\
 Use <b>/logout</b> to end the session.\n\
 Sessions expire automatically after 5 minutes of inactivity.
+
+remote_name_enter=[@] You don't have a name set yet!\n\n\
+Click on the button below and enter your name to set it.\n\
+You'll be able to change it at any time.\n\n\
+After setting your name, enter <b>/login</b> again.
+
+btn_remote_choose_name=Choose name...
+
+callback_err_remote_doesnt_exist=❌ You are not logged in!
+callback_err_remote_wait_for_edit=❌ Wait until the message gets edited!
+callback_err_remote_move_too_big=❌ This move is too big!
+
+remote_afk_warning=⌛ You will be logged off in <b>{left}s</b> due to AFKing!
+
+button_remote_logout=🚪 Logout
+button_remote_type_True=🔘 Arrows
+button_remote_type_False=🏞 World
+
+##### name changer #####
+
+inline_name_change_title=👇 Enter your new name below...
+inline_name_change_entered_title=👇 Set your name as {name}?
+inline_name_change_entered_desc=Press here to set!
+inline_name_change_long_title=👇 This name is too long!
+inline_name_change_long_desc=Maximum length - {max} characters
+inline_name_changed=[@] Name set to {name}!

@@ -9,7 +9,10 @@ from config import *
 from utils import *
 import time
 from aiogram.types import User as AiogramUser
+from aiogram.types import Message as AiogramMessage
 import random
+
+import utils
 
 # locale
 
@@ -79,7 +82,9 @@ class User:
         lang: str = 'en',
         name: str = None,
         name_changed: bool = False,
-        pos: Tuple[int,int] = DEFAULT_POS
+        pos: Tuple[int,int] = DEFAULT_POS,
+        game_name: str | None = None,
+        remote: bool = False
     ):
         '''
         A user entry in a database
@@ -90,8 +95,10 @@ class User:
         self.lang: str = lang
         self.balance: int = balance
         self.started_playing: int = started_playing if started_playing else time.time()
+        self.remote: bool = remote
         
         self.pos: Tuple[int,int] = pos
+        self.game_name: str | None = game_name
 
 
     @property
@@ -108,7 +115,9 @@ class User:
             "started_playing": self.started_playing,
             "lang": self.lang,
             "name": self.name,
-            "pos": self.pos
+            "pos": self.pos,
+            "game_name": self.game_name,
+            "remote": self.remote
         }
     
 
@@ -143,7 +152,7 @@ class Map:
         '''
         Returns a completely empty chunk.
         '''
-        return [[None for _ in range(self.chunk_size[0])] for _ in range(self.chunk_size[1])]
+        return [[None for _ in range(self.chunk_size)] for _ in range(self.chunk_size)]
 
 
     def get_chunk(self, pos: Tuple[int,int]) -> List[List[str | None]]:
@@ -171,8 +180,13 @@ class Map:
 
         for y in range(topleft[1], topleft[1]+size[1]):
             row = []
+            if y > self.size[1]: y -= self.size[1]
+            if y < 0: y += self.size[1]
 
             for x in range(topleft[0], topleft[0]+size[0]):
+                if x > self.size[0]: x -= self.size[0]
+                if x < 0: x += self.size[0]
+
                 chunk = [int(x/self.chunk_size), int(y/self.chunk_size)]
                 pos_in_chunk = [x%self.chunk_size, y%self.chunk_size]
                 
@@ -187,6 +201,14 @@ class Map:
 
         return out
     
+    
+    def get_rect_around(self, center: Tuple[int,int], extend: int) -> List[List[str | None]]:
+        '''
+        Returns a matrix of objects around the specified position.
+        '''
+        center = [center[0]-extend, center[1]-extend]
+        return self.get_rect(center, [extend*2+1, extend*2+1])
+
 
 # object library
 
@@ -200,7 +222,7 @@ class Object:
         self.color: Tuple[int,int,int] = data.get('color', (0,0,0))
 
         self.air: bool = isair
-        self.button_text: str = self.emoji if not isair else ''
+        self.button_text: str = self.emoji if not isair else ' '
 
 
 class ObjectLib:
@@ -225,10 +247,25 @@ class ObjectLib:
 # remotes
 
 class Remote:
-    def __init__(self, chat_id: int, msg_id: int, user_id: int):
+    def __init__(self, message: AiogramMessage, user_id: int):
         '''
         Remote.
         '''
+        self.message: AiogramMessage = message # message to edit when something happens
+        self.user_id: int = user_id # user ID whose remote this is
+        self.created_at: float = time.time() # when this remote was created
+        self.last_activity: float = time.time() # last activity of the remote
+        self.prev_text: str = '' # previous message text
+        self.running: bool = True # is the remote running
+        self.performed_action: bool = False # was an action performed
+        self.changed: bool = True # whether to edit the remote's message or not
+
+
+    def update_last_activity(self):
+        '''
+        Updates the last activity timer.
+        '''
+        self.last_activity = time.time()
 
 
 # main manager
@@ -388,13 +425,112 @@ class Manager:
     
 
     def set_locale(self, id:int, key:str):
+        user = self.get_user(id)
+        user.lang = key
+        self.commit()
+
+
+    def get_player_overlay(self, topleft: Tuple[int,int], size: Tuple[int,int]) -> List[List[str | None]]:
         '''
-        Sets the user's language.
+        Returns an overlay of players as a matrix,
+        where None is a transparent tile and a str is a player.
         '''
+        out = [
+            [ [] for _ in range(size[0]) ]\
+            for _ in range(size[1])
+        ]
+
+        bottomright = [topleft[0]+size[0], topleft[1]+size[1]]
+    
+        # putting players in matrix
+        for i in self.remotes:
+            user = self.get_user(i)
+            
+            # checking if the player is in bounds
+            if user.pos[0] >= topleft[0] and\
+                user.pos[0] < bottomright[0] and\
+                user.pos[1] >= topleft[1] and\
+                user.pos[1] < bottomright[1]:
+                    # putting player in matrix
+                    relpos = [user.pos[0]-topleft[0], user.pos[1]-topleft[1]]
+                    out[relpos[1]][relpos[0]].append(user)
+
+        # converting matrix of users to matrix of strings
+        textout = []
+
+        for row in out:
+            outrow = []
+
+            for col in row:
+                if len(col) == 0:
+                    outrow.append(None)
+                elif len(col) == 1:
+                    outrow.append(col[0].avatar)
+                else:
+                    outrow.append(utils.int_to_emoji(len(col)))
+
+            textout.append(outrow)
+
+        return textout
+
+
+    def check_remote(self, id:int, action: bool = True):
+        if id not in self.remotes or not self.remotes[id].running:
+            return 'callback_err_remote_doesnt_exist'
+        
+        if action:
+            remote = self.remotes[id]
+
+            if remote.performed_action:
+                return 'callback_err_remote_wait_for_edit'
+            remote.performed_action = True
+
+        return True
+    
+
+    def change_game_name(self, id:int, name:str):
+        user = self.get_user(id)
+        user.game_name = name
+        self.commit()
+    
+
+    def change_remote_type(self, id:int):
+        user = self.get_user(id)
+        user.remote = not user.remote
+
+        if id in self.remotes:
+            self.remotes[id].changed = True
+
+        self.commit()
+    
+
+    def move(self, id:int, offsetx:int, offsety:int):
         user = self.get_user(id)
 
-        user.lang = key
+        # checking distance
+        dst = abs(offsetx)+abs(offsety)
 
+        if dst > 2:
+            return 'callback_err_remote_move_too_big'
+        
+        if dst == 0:
+            return
+
+        # moving
+        user.pos[0] += offsetx
+        user.pos[1] += offsety
+
+        if user.pos[0] > self.map.size[0]:
+            user.pos[0] -= self.map.size[0]
+        if user.pos[1] > self.map.size[1]:
+            user.pos[1] -= self.map.size[1]
+
+        if user.pos[1] < 0:
+            user.pos[1] += self.map.size[0]
+        if user.pos[1] < 0:
+            user.pos[1] += self.map.size[1]
+
+        self.remotes[id].update_last_activity()
         self.commit()
 
 
