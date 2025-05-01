@@ -66,6 +66,9 @@ btn_remote_choose_name=Выбрать имя...
 callback_err_remote_doesnt_exist=❌ Ты не вошел!
 callback_err_remote_wait_for_edit=❌ Подожди пока сообщение изменится!
 callback_err_remote_move_too_big=❌ Этот шаг слишком большой!
+callback_err_remote_not_enough_energy=❌ Не хватает энергии!
+callback_err_remote_path_blocked=❌ Что-то мешает вам пройти!
+callback_err_remote_collision=❌ Туда нельзя пойти!
 
 remote_afk_warning=⌛ Вы автоматически выйдете через <b>{left}с</b> за AFK!
 

@@ -84,7 +84,9 @@ class User:
         name_changed: bool = False,
         pos: Tuple[int,int] = DEFAULT_POS,
         game_name: str | None = None,
-        remote: bool = False
+        remote: bool = False,
+        energy: int = DEFAULT_ENERGY,
+        max_energy: int = DEFAULT_MAX_ENERGY,
     ):
         '''
         A user entry in a database
@@ -99,14 +101,17 @@ class User:
         
         self.pos: Tuple[int,int] = pos
         self.game_name: str | None = game_name
+        self.energy: int = energy
+        self.max_energy: int = max_energy
 
 
     @property
     def avatar(self) -> str:
-        '''
-        Returns the player's avatar.
-        '''
         return '👶'
+
+    @property
+    def pb_style(self) -> str:
+        return 'default'
 
 
     @property
@@ -125,7 +130,9 @@ class User:
             "name": self.name,
             "pos": self.pos,
             "game_name": self.game_name,
-            "remote": self.remote
+            "remote": self.remote,
+            "energy": self.energy,
+            "max_energy": self.max_energy
         }
     
 
@@ -188,11 +195,11 @@ class Map:
 
         for y in range(topleft[1], topleft[1]+size[1]):
             row = []
-            if y > self.size[1]: y -= self.size[1]
+            if y >= self.size[1]: y -= self.size[1]
             if y < 0: y += self.size[1]
 
             for x in range(topleft[0], topleft[0]+size[0]):
-                if x > self.size[0]: x -= self.size[0]
+                if x >= self.size[0]: x -= self.size[0]
                 if x < 0: x += self.size[0]
 
                 chunk = [int(x/self.chunk_size), int(y/self.chunk_size)]
@@ -208,6 +215,20 @@ class Map:
             out.append(row)
 
         return out
+    
+
+    def get_tile(self, pos: Tuple[int,int]) -> str | None:
+        '''
+        Returns an object at a position.
+        '''
+        x = pos[0]
+        y = pos[1]
+
+        chunk = [int(x/self.chunk_size), int(y/self.chunk_size)]
+        pos_in_chunk = [x%self.chunk_size, y%self.chunk_size]
+        
+        chunk_data = self.get_chunk(chunk)
+        return chunk_data[pos_in_chunk[1]][pos_in_chunk[0]]
     
     
     def get_rect_around(self, center: Tuple[int,int], extend: int) -> List[List[str | None]]:
@@ -546,8 +567,10 @@ class Manager:
             return
         
         # broadcasting
-        user = self.get_user(id)
         remote.last_message = time.time()
+        remote.update_last_activity()
+
+        user = self.get_user(id)
         message = utils.demarkup(message)
         log(f'{user.game_name} ({user.id}) - {message}', level=CHAT)
 
@@ -567,20 +590,31 @@ class Manager:
         
         if dst == 0:
             return
+        
+        if user.energy <= 0 and dst > 1:
+            return 'callback_err_remote_not_enough_energy'
 
-        # moving
-        user.pos[0] += offsetx
-        user.pos[1] += offsety
+        # checking position
+        target_pos = utils.move(user.pos, offsetx, offsety, self.map.size)
+        between_pos = utils.move(user.pos, min(1, offsetx), min(1, offsety), self.map.size)
 
-        if user.pos[0] > self.map.size[0]:
-            user.pos[0] -= self.map.size[0]
-        if user.pos[1] > self.map.size[1]:
-            user.pos[1] -= self.map.size[1]
+        target_tile = self.obj.get(self.map.get_tile(target_pos))
 
-        if user.pos[1] < 0:
-            user.pos[1] += self.map.size[0]
-        if user.pos[1] < 0:
-            user.pos[1] += self.map.size[1]
+        if target_pos == between_pos:
+            between_tile = target_tile
+        else:
+            between_tile = self.obj.get(self.map.get_tile(between_pos))
+
+        if target_tile.collision:
+            return 'callback_err_remote_collision'
+
+        if between_tile.collision:
+            return 'callback_err_remote_path_blocked'
+        
+        # moving player
+        user.pos = target_pos
+        if dst > 1:
+            user.energy -= 1
 
         self.remotes[id].update_last_activity()
         self.commit()

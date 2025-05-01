@@ -66,6 +66,9 @@ btn_remote_choose_name=Choose name...
 callback_err_remote_doesnt_exist=❌ You are not logged in!
 callback_err_remote_wait_for_edit=❌ Wait until the message gets edited!
 callback_err_remote_move_too_big=❌ This move is too big!
+callback_err_remote_not_enough_energy=❌ Not enough energy!
+callback_err_remote_path_blocked=❌ Something is blocking your path!
+callback_err_remote_collision=❌ You can't go there!
 
 remote_afk_warning=⌛ You will be logged off in <b>{left}s</b> due to AFKing!
 

@@ -3,10 +3,54 @@ import random
 from typing import *
 import time as stime
 from config import *
+import braille_tools
+
+
+def move(pos: Tuple[int,int], x: int, y: int, mapsize: Tuple[int,int]) -> Tuple[int,int]:
+    target_pos = [pos[0], pos[1]]
+    target_pos[0] += x
+    target_pos[1] += y
+
+    if target_pos[0] > mapsize[0]:
+        target_pos[0] -= mapsize[0]
+    if target_pos[1] > mapsize[1]:
+        target_pos[1] -= mapsize[1]
+
+    if target_pos[1] < 0:
+        target_pos[1] += mapsize[0]
+    if target_pos[1] < 0:
+        target_pos[1] += mapsize[1]
+
+    return target_pos
 
 
 def demarkup(string: str) -> str:
     return string.replace('<','').replace('>', '')
+
+
+def braille_progress_bar(length: int, filled: float, style: str):
+    # bg
+    style: Style = STYLES[style]
+    out: List[List[bool]] = []
+
+    for i, (left, right) in enumerate(zip(style.left, style.right)):
+        out.append([left != ' ', right != ' '])
+
+    while len(out[0]) < length*2:
+        for index, i in enumerate(out):
+            i.insert(1, style.mid[index] != ' ')
+
+    # bar filling
+    filled = max(0, min(1, filled))
+    start = 1 if style.chop_corners else 0
+    steps = round(filled*(length*2 - start*2))
+
+    for step in range(steps):
+        for i in out:
+            i[start+step] = True
+
+    textout = braille_tools.matrix_to_braille(out)
+    return textout
 
 
 def int_to_emoji(number: int) -> str:

@@ -76,7 +76,7 @@ async def inline(q: types.InlineQuery):
 
         else:
             button = types.InlineQueryResultArticle(id=f'namechange:{query}',
-                title=l.f('inline_name_change_entered_title', name=query),
+                title=l.f('inline_name_change_entered_title', name=utils.demarkup(query)),
                 description=l.f('inline_name_change_entered_desc'),
                 input_message_content=types.InputTextMessageContent(
                     message_text=l.f(f'inline_name_changed', name=utils.demarkup(query))
@@ -115,8 +115,17 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
 
         text = text[:-1]
 
+    # main menu
+    if remote.menu == None:
         # stats
         text += '\n\n'+l.f('remote_stats_text', x=user.pos[0], y=user.pos[1])
+
+        # energy bar
+        progressbar = utils.braille_progress_bar(
+            10, user.energy/user.max_energy, user.pb_style
+        )
+        amount = f'{user.energy} / {utils.to_superscript(str(user.max_energy))}'
+        text += f'\n⚡ {progressbar} {amount}'
 
         # chat
         text += '\n'
