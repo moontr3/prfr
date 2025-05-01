@@ -3,7 +3,7 @@
 
 ##### constants and general values #####
 
-!CUR=🔆
+!CUR=₪
 !@=<code>φ</code>
 !x=<code>X</code>
 
@@ -63,22 +63,33 @@ remote_name_enter=[@] Ты ещё не поставил себе имя!\n\n\
 
 btn_remote_choose_name=Выбрать имя...
 
+callback_err_remote_daydreaming=💤 В мечтах...
 callback_err_remote_doesnt_exist=❌ Ты не вошел!
 callback_err_remote_wait_for_edit=❌ Подожди пока сообщение изменится!
 callback_err_remote_move_too_big=❌ Этот шаг слишком большой!
 callback_err_remote_not_enough_energy=❌ Не хватает энергии!
 callback_err_remote_path_blocked=❌ Что-то мешает вам пройти!
 callback_err_remote_collision=❌ Туда нельзя пойти!
+callback_err_remote_not_breakable=❌ Это нельзя ломать!
+callback_err_remote_other=❌ ...
 
-remote_afk_warning=⌛ Вы автоматически выйдете через <b>{left}с</b> за AFK!
+remote_afk_warning=⌛ Выход через <b>{left}с</b> за AFK...
 
 remote_chat_title=💬 <i>История чата</i>
 remote_chat_empty=Тут ничего нет
+
+remote_inventory_title=🎒 <i>Инвентарь (<b>{items}</b>)</i>
+
+remote_daydreaming_title=💤 <i>В мечтах...</i>
 
 button_remote_logout=🚪 Выйти
 button_remote_type_True=🔘 Пульт
 button_remote_type_False=🏞 Мир
 button_remote_chat=💬 Чат
+button_remote_break=👊 Ломать
+button_remote_inventory=🎒 Инвентарь
+button_remote_daydream=💤 Мечтать
+buttom_remote_stop_daydream=💤 Проснуться
 
 remote_stats_text=Позиция: <code>{x}</code>, <code>{y}</code>
 
@@ -86,6 +97,7 @@ err_chat_message_too_long=❌ Максимальная длина сообщен
 err_chat_message_timeout=❌ Максимум одно сообщение в секунду!
 chat_user_joined=🚪 <i>{user} присоединился!</i>
 chat_user_left=🚪 <i>{user} вышел...</i>
+chat_but_no_one_came=<i>*️⃣ Но никто не пришел...</i>
 
 ##### name changer #####
 

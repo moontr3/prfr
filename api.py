@@ -87,6 +87,8 @@ class User:
         remote: bool = False,
         energy: int = DEFAULT_ENERGY,
         max_energy: int = DEFAULT_MAX_ENERGY,
+        max_weight: int = DEFAULT_MAX_WEIGHT,
+        inventory: Dict[str, int] = {}
     ):
         '''
         A user entry in a database
@@ -103,6 +105,8 @@ class User:
         self.game_name: str | None = game_name
         self.energy: int = energy
         self.max_energy: int = max_energy
+        self.inventory: Dict[str, int] = inventory
+        self.max_weight: int = max_weight
 
 
     @property
@@ -113,13 +117,34 @@ class User:
     def pb_style(self) -> str:
         return 'default'
 
-
     @property
     def display_name(self) -> str:
         '''
         Returns the player's name to display in lists etc.
         '''
         return f'{self.avatar} {self.game_name}'
+    
+
+    def add_to_inventory(self, item: str, amount: int):
+        '''
+        Adds the item to inventory.
+        '''
+        if item not in self.inventory:
+            self.inventory[item] = amount
+        else:
+            self.inventory[item] += amount
+
+
+    def remove_from_inventory(self, item: str, amount: int):
+        '''
+        Removes the item from inventory.
+        '''
+        if item not in self.inventory:
+            return
+        
+        self.inventory[item] -= amount
+        if self.inventory[item] <= 0:
+            del self.inventory[item]
 
 
     def to_dict(self) -> dict:
@@ -132,11 +157,36 @@ class User:
             "game_name": self.game_name,
             "remote": self.remote,
             "energy": self.energy,
-            "max_energy": self.max_energy
+            "max_energy": self.max_energy,
+            "max_weight": self.max_weight,
+            "inventory": self.inventory
         }
     
 
 # map
+
+class MapObject:
+    def __init__(self, data: str):
+        '''
+        A tile on the map.
+        '''
+        args = data.split(',')
+        self.obj: str | None = args[0] if args[0] != '-' else None
+        self.durability: int | None = int(args[1]) if len(args) > 1 else None
+        self.isair: bool = self.obj == None
+
+    def to_string(self) -> str:
+        # air
+        if self.isair:
+            return '-'
+        
+        # object data
+        out = self.obj
+
+        if self.durability:
+            out += f',{self.durability}'
+
+        return out
 
 class Map:
     def __init__(self, map_data: str):
@@ -162,15 +212,25 @@ class Map:
         self.map_dir: str = data['dir']
 
 
+    def save_chunk(self, pos: Tuple[int,int], data: List[List[MapObject]]):
+        '''
+        Loads map data from file.
+        '''
+        out = '\n'.join([ ';'.join([i.to_string() for i in row]) for row in data ])
+
+        with open(f'{self.map_dir}{pos[1]}/{pos[0]}.chunk', 'w') as f:
+            f.write(out)
+
+
     @property
-    def blank_chunk(self) -> List[List[None]]:
+    def blank_chunk(self) -> List[List[MapObject]]:
         '''
         Returns a completely empty chunk.
         '''
-        return [[None for _ in range(self.chunk_size)] for _ in range(self.chunk_size)]
+        return [[MapObject('-') for _ in range(self.chunk_size)] for _ in range(self.chunk_size)]
 
 
-    def get_chunk(self, pos: Tuple[int,int]) -> List[List[str | None]]:
+    def get_chunk(self, pos: Tuple[int,int]) -> List[List[MapObject]]:
         '''
         Reads a file of a chunk and returns its contents.
         '''
@@ -182,16 +242,19 @@ class Map:
         with open(target) as f:
             data = f.read()
 
-        out = [ [ i if i != '-' else None for i in row.split(';') ] for row in data.split('\n') ]
+        out = [
+            [ MapObject(i) for i in row.split(';') ]\
+                for row in data.split('\n')
+        ]
         return out
     
 
-    def get_rect(self, topleft: Tuple[int,int], size: Tuple[int,int]) -> List[List[str | None]]:
+    def get_rect(self, topleft: Tuple[int,int], size: Tuple[int,int]) -> List[List[MapObject]]:
         '''
         Returns a matrix of objects at the specified position.
         '''
         out = []
-        chunks: Dict[str, List[List[str | None]]] = {}
+        chunks: Dict[str, List[List[MapObject]]] = {}
 
         for y in range(topleft[1], topleft[1]+size[1]):
             row = []
@@ -210,14 +273,15 @@ class Map:
                     chunks[str(chunk)] = self.get_chunk(chunk)
 
                 chunk = chunks[str(chunk)]
-                row.append(chunk[pos_in_chunk[1]][pos_in_chunk[0]])
+                obj = chunk[pos_in_chunk[1]][pos_in_chunk[0]]
+                row.append(obj)
 
             out.append(row)
 
         return out
     
 
-    def get_tile(self, pos: Tuple[int,int]) -> str | None:
+    def get_tile(self, pos: Tuple[int,int]) -> MapObject:
         '''
         Returns an object at a position.
         '''
@@ -231,7 +295,7 @@ class Map:
         return chunk_data[pos_in_chunk[1]][pos_in_chunk[0]]
     
     
-    def get_rect_around(self, center: Tuple[int,int], extend: int) -> List[List[str | None]]:
+    def get_rect_around(self, center: Tuple[int,int], extend: int) -> List[List[MapObject]]:
         '''
         Returns a matrix of objects around the specified position.
         '''
@@ -241,6 +305,26 @@ class Map:
 
 # object library
 
+class ItemDrop:
+    def __init__(self, data: Dict):
+        '''
+        A possible item drop
+        '''
+        self.item: str = data['item']
+        self.amount: Range = Range(data.get('amount', 1))
+        self.chance: float = data.get('chance', 1)
+
+
+    def get_drop(self) -> int | None:
+        if random.random() > self.chance:
+            return
+        
+        amount = self.amount.get()
+        if amount <= 0:
+            return
+        
+        return amount
+
 class Object:
     def __init__(self, key: str, data: Dict, isair: bool = False):
         '''
@@ -249,9 +333,10 @@ class Object:
         self.key: str = key
         self.emoji: str = data.get('emoji', '▪')
         self.color: Tuple[int,int,int] = data.get('color', (0,0,0))
-        self.item_emoji: str = data.get('item_emoji', self.emoji)
         self.fluid: bool = data.get('fluid', False)
         self.collision: bool = data.get('collision', False)
+        self.durability: int = data.get('durability', 0)
+        self.drops: List[ItemDrop] = [ItemDrop(i) for i in data.get('drops', [])]
 
         self.air: bool = isair
         self.button_text: str = self.emoji if not isair else ' '
@@ -273,7 +358,36 @@ class ObjectLib:
             return self.data[key]
         
         return Object(None, {}, True)
-    
+
+
+# item library
+
+class Item:
+    def __init__(self, key: str, data: Dict):
+        '''
+        Represents an item.
+        '''
+        self.key: str = key
+        self.emoji: str = data.get('emoji', '❓')
+        self.weight: int = data.get('weight', 0)
+
+
+class ItemLib:
+    def __init__(self, data: Dict[str, Dict]): 
+        '''
+        Library of items.
+        '''
+        self.data: Dict[str, Dict] = {k: Item(k, v) for k, v in data.items()}
+
+
+    def get(self, key: str) -> Object:
+        '''
+        Returns an item by its key.
+        '''
+        if key in self.data:
+            return self.data[key]
+        
+        return Item(key, {})
 
 
 # remotes
@@ -293,7 +407,13 @@ class Remote:
         self.changed: bool = True # whether to edit the remote's message or not
         self.chat: List[str] = [] # chat history
         self.last_message: float = 0
+        self.inv_selected: str | None = None
         self.menu: str | None = None
+        self.durability_current: int = None
+        self.durability_item: Object = None
+        self.acquired_items: Dict[Item, int] = {}
+        self.daydreaming: bool = False
+        self.daydream_energy_time: float = time.time()
 
 
     def update_last_activity(self):
@@ -301,6 +421,39 @@ class Remote:
         Updates the last activity timer.
         '''
         self.last_activity = time.time()
+
+
+    def reset_data(self):
+        '''
+        Resets temporary data.
+        '''
+        self.durability_item = None
+        self.durability_current = None
+        self.acquired_items: Dict[Item, int] = {}
+
+
+    def switch_daydreaming(self):
+        '''
+        Switches daydreaming on or off.
+        '''
+        self.daydreaming = not self.daydreaming
+
+        if self.daydreaming:
+            self.daydream_energy_time = time.time()
+
+
+# inventory
+
+class InvItem:
+    def __init__(self, key: str, amount: int, item: Item):
+        '''
+        A slot of items in the inventory.
+        '''
+        self.key: str = key
+        self.amount: int = amount
+        self.item: Item = item
+
+        self.weight: int = self.amount*self.item.weight
 
 
 # main manager
@@ -385,6 +538,7 @@ class Manager:
 
         self.data = data
         self.obj: ObjectLib = ObjectLib(data['obj'])
+        self.item: ItemLib = ItemLib(data['item'])
 
         self.locales: Dict[str, Locale] = {}
 
@@ -459,6 +613,15 @@ class Manager:
         return botuser
     
 
+    def get_inventory(self, user: User) -> List[InvItem]:
+        out = []
+
+        for item, amount in user.inventory.items():
+            out.append(InvItem(item, amount, self.item.get(item)))
+
+        return out
+    
+
     def set_locale(self, id:int, key:str):
         user = self.get_user(id)
         log(f'{user.game_name} ({user.id}) changed language to {key}')
@@ -508,14 +671,29 @@ class Manager:
             textout.append(outrow)
 
         return textout
+    
+
+    def remote_tick(self, user: User, remote: Remote):
+        # daydreaming xp
+        if remote.daydreaming:
+            if time.time()-remote.daydream_energy_time > DAYDREAM_ENERGY_EVERY_SECONDS:
+                remote.daydream_energy_time += DAYDREAM_ENERGY_EVERY_SECONDS
+
+                if user.energy < user.max_energy:
+                    user.energy += 1
+
+                remote.update_last_activity()
 
 
-    def check_remote(self, id:int, action: bool = True):
+    def check_remote(self, id:int, action: bool = True, daydream: bool = False):
         if id not in self.remotes or not self.remotes[id].running:
             return 'callback_err_remote_doesnt_exist'
         
         if action:
             remote = self.remotes[id]
+
+            if remote.daydreaming and not daydream:
+                return 'callback_err_remote_daydreaming'
 
             if remote.performed_action:
                 return 'callback_err_remote_wait_for_edit'
@@ -576,7 +754,10 @@ class Manager:
 
         for i in self.remotes.values():
             em = '🗨' if i.user_id == id else '💬'
-            i.chat.append(f'{user.game_name} {em} {message}')
+            i.chat.append(f'<b>{user.game_name}</b> {em} {message}')
+
+        if len(self.remotes) == 1:
+            remote.chat.append(l.f('chat_but_no_one_came'))
 
 
     def move(self, id:int, offsetx:int, offsety:int):
@@ -596,14 +777,16 @@ class Manager:
 
         # checking position
         target_pos = utils.move(user.pos, offsetx, offsety, self.map.size)
-        between_pos = utils.move(user.pos, min(1, offsetx), min(1, offsety), self.map.size)
+        between_pos = utils.move(
+            user.pos, max(-1, min(1, offsetx)), max(-1, min(1, offsety)), self.map.size
+        )
 
-        target_tile = self.obj.get(self.map.get_tile(target_pos))
+        target_tile = self.obj.get(self.map.get_tile(target_pos).obj)
 
         if target_pos == between_pos:
             between_tile = target_tile
         else:
-            between_tile = self.obj.get(self.map.get_tile(between_pos))
+            between_tile = self.obj.get(self.map.get_tile(between_pos).obj)
 
         if target_tile.collision:
             return 'callback_err_remote_collision'
@@ -618,6 +801,73 @@ class Manager:
 
         self.remotes[id].update_last_activity()
         self.commit()
+
+
+    def destroy(self, id:int, offsetx:int, offsety:int):
+        user = self.get_user(id)
+        remote = self.remotes[id]
+
+        # checking distance
+        dst = abs(offsetx)+abs(offsety)
+
+        if dst > 1:
+            return 'callback_err_remote_other'
+        
+        if dst == 0:
+            return
+        
+        if user.energy <= 0:
+            return 'callback_err_remote_not_enough_energy'
+
+        # checking tile
+        target_pos = utils.move(user.pos, offsetx, offsety, self.map.size)
+        
+        chunk = [
+            int(target_pos[0]/self.map.chunk_size),
+            int(target_pos[1]/self.map.chunk_size)
+        ]
+        pos_in_chunk = [
+            target_pos[0]%self.map.chunk_size,
+            target_pos[1]%self.map.chunk_size
+        ]
+        chunk_data = self.map.get_chunk(chunk)
+        map_tile: MapObject = chunk_data[pos_in_chunk[1]][pos_in_chunk[0]]
+
+        target_tile = self.obj.get(map_tile.obj)
+
+        if target_tile.durability <= 0:
+            return 'callback_err_remote_not_breakable'
+        
+        # damaging tile
+        if map_tile.durability == None:
+            map_tile.durability = target_tile.durability
+        map_tile.durability -= 1
+        user.energy -= 1
+
+        # breaking
+        remote.acquired_items = {}
+
+        if map_tile.durability == 0:
+            chunk_data[pos_in_chunk[1]][pos_in_chunk[0]] = MapObject('-')
+            remote.reset_data()
+
+            # item drops
+            for drop in target_tile.drops:
+                amount = drop.get_drop()
+
+                if amount:
+                    user.add_to_inventory(drop.item, amount)
+                    item = self.item.get(drop.item)
+                    remote.acquired_items[item] = amount
+
+        else:
+            remote.durability_item = target_tile
+            remote.durability_current = map_tile.durability
+
+        self.map.save_chunk(chunk, chunk_data)
+        self.commit()
+
+        remote.update_last_activity()
 
 
     def pay_money(self, author:int, id:int, amount:int) -> bool:

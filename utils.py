@@ -53,6 +53,14 @@ def braille_progress_bar(length: int, filled: float, style: str):
     return textout
 
 
+def progress_bar(current: int, max: int, prefix: str, style: str = 'default', length: int = 10):
+    progressbar = braille_progress_bar(
+        length, current/max, style
+    )
+    amount = f'{current} / {to_superscript(max)}'
+    return f'{prefix} {progressbar} {amount}'
+
+
 def int_to_emoji(number: int) -> str:
     if number > 10:
         return '🔢'
@@ -145,7 +153,7 @@ def card_name(l, card, meta, bold=True, formatting=True, fusion_lvl:int=None, sh
     return f'<code>[{card.level}]</code> {flvl_str} {name}'
 
 
-def progress_bar(current:int, total:int, length:int=10, symbols:str=' ▏▎▍▍▌▋▊▉█') -> str:
+def block_progress_bar(current:int, total:int, length:int=10, symbols:str=' ▏▎▍▍▌▋▊▉█') -> str:
     '''
     Returns a progress bar to put in a message.
     '''

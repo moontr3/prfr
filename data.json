@@ -14,25 +14,36 @@
                     "chance": 0.8
                 }
             ],
+            "durability": 10,
             "collision": true
         },
         "tree": {
             "emoji": "🌳",
             "color": [58, 163, 36],
+            "drops": [
+                {
+                    "item": "log",
+                    "amount": [1,3]
+                },
+                {
+                    "item": "leaves",
+                    "amount": [1,5],
+                    "chance": 0.8
+                }
+            ],
+            "durability": 10,
+            "collision": true
+        },
+        "log": {
+            "emoji": "🪵",
+            "color": [54, 23, 10],
+            "drops": [ {"item": "log"} ],
+            "durability": 5,
             "collision": true
         },
         "seed": {
             "emoji": "🌱",
             "color": [101, 214, 77]
-        },
-        "log": {
-            "emoji": "🪵",
-            "color": [54, 23, 10],
-            "collision": true
-        },
-        "leaves": {
-            "emoji": "🍂",
-            "color": [189, 124, 58]
         },
         "water1": {
             "emoji": "🔹",
@@ -53,6 +64,16 @@
             "emoji": "🟦",
             "color": [54, 130, 255],
             "fluid": true
+        }
+    },
+    "item": {
+        "log": {
+            "emoji": "🪵",
+            "weight": 10,
+            "block": "log"
+        },
+        "leaves": {
+            "emoji": "🍂"
         }
     }
 }

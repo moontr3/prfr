@@ -96,8 +96,17 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
     '''
     text = ''
 
+    # daydreaming title
+    if remote.daydreaming:
+        text += l.f('remote_daydreaming_title')
+
+        text += '\n'+utils.progress_bar(
+            user.energy, user.max_energy, '⚡', user.pb_style
+        )
+        return text
+
     # minimap
-    if remote.menu in [None]:
+    if remote.menu in [None, 'break']:
         data = mg.map.get_rect_around(user.pos, 4)
         topleft = [user.pos[0]-4, user.pos[1]-4]
         overlay = mg.get_player_overlay(topleft, (9,9))
@@ -107,32 +116,44 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
 
             for x, i in enumerate(row):
                 if overlay[y][x] == None:
-                    outrow += mg.obj.get(i).emoji
+                    outrow += mg.obj.get(i.obj).emoji
                 else:
                     outrow += overlay[y][x]
         
             text += f'{outrow}\n'
 
-        text = text[:-1]
-
-    # main menu
+    # stats
     if remote.menu == None:
-        # stats
-        text += '\n\n'+l.f('remote_stats_text', x=user.pos[0], y=user.pos[1])
+        text += '\n'+l.f('remote_stats_text', x=user.pos[0], y=user.pos[1])
 
-        # energy bar
-        progressbar = utils.braille_progress_bar(
-            10, user.energy/user.max_energy, user.pb_style
+    # energy bar
+    if remote.menu in [None, 'break']:
+        text += '\n'+utils.progress_bar(
+            user.energy, user.max_energy, '⚡', user.pb_style
         )
-        amount = f'{user.energy} / {utils.to_superscript(str(user.max_energy))}'
-        text += f'\n⚡ {progressbar} {amount}'
 
-        # chat
+    # durability info
+    if remote.menu == 'break':
+        if remote.durability_item:
+            text += '\n'+utils.progress_bar(
+                remote.durability_current, remote.durability_item.durability,
+                remote.durability_item.emoji, user.pb_style
+            )
+
+        if remote.acquired_items:
+            out = []
+            for item, amount in remote.acquired_items.items():
+                out.append(f'{item.emoji} +{amount}')
+
+            text += '\n' + ' ・ '.join(out)
+    
+    # chat
+    if remote.menu == None:
         text += '\n'
         for i in remote.chat[-CHAT_HISTORY:]:
             text += f'\n{i}'
 
-    # chat
+    # chat history
     if remote.menu == 'chat':
         text += l.f('remote_chat_title')+'\n\n'
 
@@ -141,6 +162,19 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
 
         for i in remote.chat[-CHAT_HISTORY_MENU:]:
             text += f'{i}\n'
+
+    # inventory title
+    if remote.menu == 'inventory':
+        inv = mg.get_inventory(user)
+        weight = sum([i.weight for i in inv])
+        items = sum([i.amount for i in inv])
+
+        text += l.f(
+            'remote_inventory_title', items=items
+        )
+        text += '\n'+utils.progress_bar(
+            weight, user.max_weight, '⚖', user.pb_style
+        )
 
     # remote timeout warning
     if time.time()-remote.last_activity > MAX_AFK_TIME_SECONDS-15:
@@ -157,6 +191,13 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
     Returns the keyboard of the message.
     '''
     kb = InlineKeyboardBuilder()
+
+    # back button
+    if remote.daydreaming:
+        kb.add(types.InlineKeyboardButton(
+            text=l.f('buttom_remote_stop_daydream'), callback_data='daydream'
+        ))
+        return kb
 
     # walking buttons
     if remote.menu == None:
@@ -175,13 +216,25 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
                 elif user.remote:
                     text = REMOTE_BUTTONS[y+2][x+2]
                 else:
-                    text = mg.obj.get(item).button_text
+                    text = mg.obj.get(item.obj).button_text
 
                 buttons.append(types.InlineKeyboardButton(
                     text=text, callback_data=f'move:{x}:{y}'
                 ))
 
             kb.row(*buttons)
+
+        # action buttons
+        kb.row(types.InlineKeyboardButton(
+            text=l.f('button_remote_break'), callback_data='menu:break'
+        ))
+
+        kb.row(types.InlineKeyboardButton(
+            text=l.f('button_remote_inventory'), callback_data='menu:inventory'
+        ))
+        kb.add(types.InlineKeyboardButton(
+            text=l.f('button_remote_daydream'), callback_data='daydream'
+        ))
 
         # options buttons
         kb.row(types.InlineKeyboardButton(
@@ -192,6 +245,53 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
         ))
         kb.add(types.InlineKeyboardButton(
             text=l.f('button_remote_logout'), callback_data='logout'
+        ))
+
+    # walking buttons
+    elif remote.menu == 'break':
+        data = mg.map.get_rect_around(user.pos, 1)
+        topleft = [-1,-1]
+
+        for y, row in enumerate(data):
+            buttons = []
+            y = topleft[1]+y
+
+            for x, item in enumerate(row):
+                x = topleft[0]+x
+
+                if x != 0 and y != 0:
+                    text = '▪'
+                else:
+                    text = mg.obj.get(item.obj).button_text
+
+                buttons.append(types.InlineKeyboardButton(
+                    text=text, callback_data=f'break:{x}:{y}'
+                ))
+
+            kb.row(*buttons)
+
+        # options buttons
+        kb.row(types.InlineKeyboardButton(
+            text=l.f('general_back'), callback_data='menu:None'
+        ))
+
+    # inventory
+    elif remote.menu == 'inventory':
+        inv = mg.get_inventory(user)
+
+        for item in inv:
+            text = item.item.emoji+utils.to_superscript(str(item.amount))
+            text = f'[{text}]' if item.key == remote.inv_selected else text
+
+            kb.add(types.InlineKeyboardButton(
+                text=text, callback_data=f'selectitem:{item.key}'
+            ))
+
+        kb.adjust(5, repeat=True)
+
+        # options buttons
+        kb.row(types.InlineKeyboardButton(
+            text=l.f('general_back'), callback_data='menu:None'
         ))
 
     # back button
@@ -218,6 +318,20 @@ async def change_remote_type(call: types.callback_query):
     await call.answer()
 
 
+@dp.callback_query(F.data == 'daydream')
+async def change_remote_type(call: types.callback_query):
+    user = mg.get_user(call.from_user)
+    l = mg.get_locale(user.lang)
+
+    out = mg.check_remote(user.id, daydream=True)
+    if out != True: return await call.answer(l.f(out))
+
+    # changing type
+    remote = mg.remotes[call.from_user.id]
+    remote.switch_daydreaming()
+    await call.answer()
+
+
 @dp.callback_query(F.data.startswith('menu:'))
 async def change_remote_type(call: types.callback_query):
     user = mg.get_user(call.from_user)
@@ -231,6 +345,24 @@ async def change_remote_type(call: types.callback_query):
     menu = args[1] if args[1] != 'None' else None
     remote = mg.remotes[call.from_user.id]
     remote.menu = menu
+    remote.changed = True
+    remote.reset_data()
+    await call.answer()
+
+
+@dp.callback_query(F.data.startswith('selectitem:'))
+async def inv_select_item(call: types.callback_query):
+    user = mg.get_user(call.from_user)
+    l = mg.get_locale(user.lang)
+    args = call.data.split(':')
+
+    out = mg.check_remote(user.id)
+    if out != True: return await call.answer(l.f(out))
+
+    # selecting item
+    remote = mg.remotes[call.from_user.id]
+    remote.inv_selected = None if args[1] == remote.inv_selected else args[1]
+    remote.changed = True
     await call.answer()
 
 
@@ -266,6 +398,25 @@ async def move_player(call: types.callback_query):
     await call.answer()
 
 
+@dp.callback_query(F.data.startswith('break:'))
+async def break_object(call: types.callback_query):
+    user = mg.get_user(call.from_user)
+    l = mg.get_locale(user.lang)
+    args = call.data.split(':')
+
+    out = mg.check_remote(user.id)
+    if out != True: return await call.answer(l.f(out))
+
+    # breaking
+    x = int(args[1])
+    y = int(args[2])
+
+    out = mg.destroy(call.from_user.id, x, y)
+    if out: return await call.answer(l.f(out))
+
+    await call.answer()
+
+
 # remote loop
 
 async def run_remote_cycle(userid: int):
@@ -286,6 +437,7 @@ async def run_remote_cycle(userid: int):
 
         # waiting until editing message
         await asyncio.sleep(1)
+        mg.remote_tick(user, remote)
 
         # getting new message contents
         newtext = get_remote_text(l, remote, user)

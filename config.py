@@ -14,9 +14,11 @@ CHAT_HISTORY = 5
 CHAT_HISTORY_MENU = 25
 MAX_CHAT_LENGTH = 64
 CHAT_TIMEOUT = 1
+DAYDREAM_ENERGY_EVERY_SECONDS = 5
 
 DEFAULT_ENERGY = 150
 DEFAULT_MAX_ENERGY = 200
+DEFAULT_MAX_WEIGHT = 1000
 
 # progress bar styles
 
@@ -29,5 +31,8 @@ class Style:
         
 STYLES: dict[str, Style] = {
     'default': Style(' ## ', '#  #', ' ## ', True),
-    'square': Style('####', '#  #', '####', True)
+    'square':  Style('####', '#  #', '####', True),
+    'tb':      Style('    ', '    ', '#  #', False),
+    'bottom':  Style('    ', '    ', '   #', False),
+    'mid':     Style('    ', '    ', ' ## ', False),
 }

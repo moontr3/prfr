@@ -3,7 +3,7 @@ English
 
 ##### constants and general values #####
 
-!CUR=🔆
+!CUR=₪
 !@=<code>φ</code>
 !x=<code>X</code>
 
@@ -63,22 +63,33 @@ After setting your name, enter <b>/login</b> again.
 
 btn_remote_choose_name=Choose name...
 
+callback_err_remote_daydreaming=💤 Daydreaming...
 callback_err_remote_doesnt_exist=❌ You are not logged in!
 callback_err_remote_wait_for_edit=❌ Wait until the message gets edited!
 callback_err_remote_move_too_big=❌ This move is too big!
 callback_err_remote_not_enough_energy=❌ Not enough energy!
 callback_err_remote_path_blocked=❌ Something is blocking your path!
 callback_err_remote_collision=❌ You can't go there!
+callback_err_remote_not_breakable=❌ You can't break this!
+callback_err_remote_other❌ ...
 
-remote_afk_warning=⌛ You will be logged off in <b>{left}s</b> due to AFKing!
+remote_afk_warning=⌛ Logging out in <b>{left}s</b> due to AFKing...
 
 remote_chat_title=💬 <i>Chat history</i>
 remote_chat_empty=Nothing here
+
+remote_inventory_title=🎒 <i>Inventory (<b>{items}</b>)</i>
+
+remote_daydreaming_title=💤 <i>Daydreaming...</i>
 
 button_remote_logout=🚪 Leave
 button_remote_type_True=🔘 Remote
 button_remote_type_False=🏞 World
 button_remote_chat=💬 Chat
+button_remote_break=👊 Break
+button_remote_inventory=🎒 Inventory
+button_remote_daydream=💤 Daydream
+buttom_remote_stop_daydream=💤 Wake up
 
 remote_stats_text=Position: <code>{x}</code>, <code>{y}</code>
 
@@ -86,6 +97,7 @@ err_chat_message_too_long=❌ Maximum message length - {max}!
 err_chat_message_timeout=❌ Only one message every second!
 chat_user_joined=🚪 <i>{user} logged in!</i>
 chat_user_left=🚪 <i>{user} logged out...</i>
+chat_but_no_one_came=<i>*️⃣ But no one came...</i>
 
 ##### name changer #####
 
