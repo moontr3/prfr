@@ -72,6 +72,8 @@ else:
 
     rows = data.split('\n')
     size = [len(rows[0].split(';')), len(rows)]
+    chunk_size = 64
+    chunks = [round(size[0]/chunk_size), round(size[1]/chunk_size)]
     drawn = []
 
     for i in rows:
@@ -105,6 +107,7 @@ Use LMB to draw
 Use LMB + Space to erase
 Use E to export
 Use S to save
+Use I to save map image to temp/
 Use Shift + Mouse wheel to change object
 Use Mouse wheel to change pen size
 Use Ctrl + Mouse wheel to zoom
@@ -167,6 +170,14 @@ def save():
     print('Saved!')
 
 
+def save_image():
+    if not os.path.exists('temp/'):
+        os.mkdir('temp/')
+
+    pg.image.save(surface, f'temp/{filename}.png')
+    print('Image saved!')
+
+
 # title updating
 
 def update_title():
@@ -210,6 +221,12 @@ while running:
                     export()
                 except Exception as e:
                     print(f'Error while exporting: {e}')
+
+            if event.key == pg.K_i:
+                try:
+                    save_image()
+                except Exception as e:
+                    print(f'Error while saving image: {e}')
 
             if event.unicode in ['1', '2']:
                 tool = int(event.unicode)-1

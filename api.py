@@ -345,6 +345,7 @@ class Object:
         self.collision: bool = data.get('collision', False)
         self.durability: int = data.get('durability', 0)
         self.drops: List[ItemDrop] = [ItemDrop(i) for i in data.get('drops', [])]
+        self.max_drops: int | None = data.get('max_drops', None)
 
         self.air: bool = isair
         self.button_text: str = self.emoji if not isair else ' '
@@ -893,6 +894,10 @@ class Manager:
                     item = self.item.get(drop.item)
                     remote.acquired_items[item] = amount
 
+                    if target_tile.max_drops != None:
+                        if amount >= target_tile.max_drops:
+                            break
+
         else:
             remote.durability_item = target_tile
             remote.durability_current = map_tile.durability
@@ -928,6 +933,11 @@ class Manager:
 
         if not map_tile.isair and not target_tile.fluid:
             return 'callback_err_remote_occupied'
+
+        for i in self.remotes:
+            currentuser = self.get_user(i)
+            if currentuser.pos == target_pos:
+                return 'callback_err_remote_player_there'
         
         # checking selected object
         inv = self.get_inventory(user)

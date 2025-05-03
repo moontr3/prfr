@@ -80,6 +80,7 @@ callback_err_remote_occupied=❌ Something is already placed here!
 callback_err_remote_item_not_chosen=❌ Choose an item to place!
 callback_err_remote_item_not_placeable=❌ You can't place the selected item!
 callback_err_remote_too_far_away=❌ Too far away!
+callback_err_remote_player_there=❌ Someone is standing there!
 
 remote_afk_warning=⌛ Logging out in <b>{left}s</b> due to AFKing...
 
@@ -126,16 +127,44 @@ inline_name_changed=[@] Name set to {name}!
 
 ##### items #####
 
-item_desc=<i>{emoji} {name}</i> (<b>{amount}</b>)\n\
+item_desc=<i>{emoji} {name} (<b>{amount}</b>)</i>\n\
 ⚖ {one_weight} × {amount} = <b>{weight}</b>
-item_tag_placeable=<i>Placeable</i>
 
 item_log=Log
+item_desc_log=Simple, but sturdy. Good for handiwork.
 item_leaves=Leaves
+item_desc_leaves=Comparable to trash. Unless you know how to utilize it.
 item_green_apple=Green apple
+item_desc_green_apple=This one is a bit sour.
 item_red_apple=Red apple
+item_desc_red_apple=This one is a bit sweet.
 item_dead_squirrel=Dead squirrel
+item_desc_dead_squirrel=Don't worry, it was lying here since a long time ago.
 item_stone=Stone
+item_desc_stone=Miners' gacha machine. May contain some useful roundstones!
 item_amanita=Fly agaric
+item_desc_amanita=Don't eat this, you'll get sick!
 item_mushroom=Mushroom
+item_desc_mushroom=Looks fine and safe to consume.
 item_stick=Stick
+item_desc_stick=A couple of the long ones to help you build the things you need.
+item_coal=Coal roundstone
+item_desc_coal=Why is it so round?
+item_bronze=Bronze roundstone
+item_desc_bronze=Don't let it oxidize!
+item_iron=Iron roundstone
+item_desc_iron=Relatively shiny. Almost like a nacre roundstone.
+item_silver=Silver roundstone
+item_desc_silver=A tad bit shinier than iron roundstone.
+item_emerald=Emerald roundstone
+item_desc_emerald=Huh-huh! *villager noises 👃*
+item_gold=Gold roundstone
+item_desc_gold=This must be worth at least 3 [CUR]!
+item_ruby=Ruby roundstone
+item_desc_ruby=This one has edges! So not that round of a roundstone...
+item_quartz=Quartz roundstone
+item_desc_quartz=Weird roundstone. Unsettling.
+item_gem=Gemstone
+item_desc_gem=Nacre roundstone is still better!
+item_nacre=Nacre roundstone
+item_desc_nacre=One of the most valuable things in the game.

@@ -67,6 +67,40 @@
         "stone": {
             "emoji": "🪨",
             "color": [128, 128, 128],
+            "drops": [
+                {"item": "silver", "chance": 0.05},
+                {"item": "iron", "chance": 0.1},
+                {"item": "bronze", "chance": 0.2},
+                {"item": "coal", "chance": 0.3},
+                {"item": "stone"}
+            ],
+            "max_drops": 1,
+            "durability": 4,
+            "collision": true
+        },
+        "boulder": {
+            "emoji": "🪨",
+            "color": [192, 192, 192],
+            "drops": [
+                {"item": "nacre", "chance": 0.001},
+                {"item": "gem", "chance": 0.003},
+                {"item": "quartz", "chance": 0.007},
+                {"item": "ruby", "chance": 0.01},
+                {"item": "gold", "chance": 0.02},
+                {"item": "emerald", "chance": 0.025},
+                {"item": "silver", "chance": 0.05},
+                {"item": "iron", "chance": 0.1},
+                {"item": "bronze", "chance": 0.2},
+                {"item": "coal", "chance": 0.3},
+                {"item": "stone", "amount": [1, 3]}
+            ],
+            "max_drops": 1,
+            "durability": 15,
+            "collision": true
+        },
+        "placedstone": {
+            "emoji": "🪨",
+            "color": [255,0,0],
             "drops": [ {"item": "stone"} ],
             "durability": 4,
             "collision": true
@@ -126,7 +160,47 @@
         "stone": {
             "emoji": "🪨",
             "weight": 5,
-            "block": "stone"
+            "block": "placedstone"
+        },
+        "coal": {
+            "emoji": "🌑",
+            "weight": 1
+        },
+        "bronze": {
+            "emoji": "🟤",
+            "weight": 1
+        },
+        "iron": {
+            "emoji": "🏐",
+            "weight": 1
+        },
+        "silver": {
+            "emoji": "⚪",
+            "weight": 1
+        },
+        "emerald": {
+            "emoji": "🟢",
+            "weight": 1
+        },
+        "gold": {
+            "emoji": "🌕",
+            "weight": 1
+        },
+        "ruby": {
+            "emoji": "🛑",
+            "weight": 1
+        },
+        "quartz": {
+            "emoji": "⚽",
+            "weight": 1
+        },
+        "gem": {
+            "emoji": "💎",
+            "weight": 3
+        },
+        "nacre": {
+            "emoji": "🪩",
+            "weight": 10
         },
         "leaves": {
             "emoji": "🍂"

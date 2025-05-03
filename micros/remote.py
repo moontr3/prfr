@@ -193,11 +193,11 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
             text += f'\n\n'+l.f(
                 'item_desc',
                 emoji=selitem.item.emoji, name=l.f(f'item_{selitem.key}'),
-                amount=selitem.amount, weight=selitem.weight, one_weight=selitem.item.weight
+                amount=selitem.amount, weight=selitem.weight, one_weight=selitem.item.weight,
             )
-
-            if selitem.item.block:
-                text += '\n'+l.f('item_tag_placeable')
+            itemdesckey = f'item_desc_{selitem.key}'
+            if itemdesckey in l.strings:
+                text += f'\n<blockquote>{l.f(itemdesckey)}</blockquote>'
 
     # remote timeout warning
     if time.time()-remote.last_activity > MAX_AFK_TIME_SECONDS-15:
