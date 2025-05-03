@@ -50,13 +50,15 @@ status_text=[@] <i>Server status:</i>
 status_desc_players_online=Online players (<code>{online}</code>):
 status_desc_no_players_online=<i>No one is playing right now...</i>
 
+err_logout_no_remote=[x] You are not playing right now!
+
 err_remote_not_private=[x] You can only login in bot's DMs!
 
 err_remote_exists=[x] You are already logged in!\n\
 Use <b>/logout</b> to end the session.\n\
 Sessions expire automatically after 5 minutes of inactivity.
 
-remote_name_enter=[@] You don't have a name set yet!\n\n\
+remote_name_enter=[@] Firstly, you need to set a name!\n\n\
 Click on the button below and enter your name to set it.\n\
 You'll be able to change it at any time.\n\n\
 After setting your name, enter <b>/login</b> again.
@@ -72,6 +74,12 @@ callback_err_remote_path_blocked=❌ Something is blocking your path!
 callback_err_remote_collision=❌ You can't go there!
 callback_err_remote_not_breakable=❌ You can't break this!
 callback_err_remote_other❌ ...
+callback_err_remote_no_item_selected=❌ No item selected!
+callback_err_remote_not_edible=❌ You can't eat this!
+callback_err_remote_occupied=❌ Something is already placed here!
+callback_err_remote_item_not_chosen=❌ Choose an item to place!
+callback_err_remote_item_not_placeable=❌ You can't place the selected item!
+callback_err_remote_too_far_away=❌ Too far away!
 
 remote_afk_warning=⌛ Logging out in <b>{left}s</b> due to AFKing...
 
@@ -82,14 +90,20 @@ remote_inventory_title=🎒 <i>Inventory (<b>{items}</b>)</i>
 
 remote_daydreaming_title=💤 <i>Daydreaming...</i>
 
+remote_inventory_no_item_selected=🎒 Click on the button to choose an item.\n\
+Make sure it is <i>placeable</i>!
+
 button_remote_logout=🚪 Leave
 button_remote_type_True=🔘 Remote
 button_remote_type_False=🏞 World
 button_remote_chat=💬 Chat
 button_remote_break=👊 Break
+button_remote_place=👆 Place
+button_remote_place_choose_item=🎒 Choose item...
 button_remote_inventory=🎒 Inventory
 button_remote_daydream=💤 Daydream
 buttom_remote_stop_daydream=💤 Wake up
+button_remote_eat=🍴 Eat ({energy} ⚡)
 
 remote_stats_text=Position: <code>{x}</code>, <code>{y}</code>
 
@@ -109,3 +123,19 @@ inline_name_change_entered_desc=Press here to set!
 inline_name_change_long_title=👇 This name is too long!
 inline_name_change_long_desc=Maximum length - {max} characters
 inline_name_changed=[@] Name set to {name}!
+
+##### items #####
+
+item_desc=<i>{emoji} {name}</i> (<b>{amount}</b>)\n\
+⚖ {one_weight} × {amount} = <b>{weight}</b>
+item_tag_placeable=<i>Placeable</i>
+
+item_log=Log
+item_leaves=Leaves
+item_green_apple=Green apple
+item_red_apple=Red apple
+item_dead_squirrel=Dead squirrel
+item_stone=Stone
+item_amanita=Fly agaric
+item_mushroom=Mushroom
+item_stick=Stick

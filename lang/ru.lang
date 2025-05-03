@@ -50,13 +50,15 @@ status_text=[@] <i>Статус сервера:</i>
 status_desc_players_online=Игроки онлайн (<code>{online}</code>):
 status_desc_no_players_online=<i>Сейчас никто не играет...</i>
 
+err_logout_no_remote=[x] Ты сейчас не играешь!
+
 err_remote_not_private=[x] Входить можно только в ЛС с ботом!
 
 err_remote_exists=[x] Ты уже вошел!\n\
 Используй <b>/logout</b> для завершения сессии.\n\
 Сессии заканчиваются автоматически после 5 минут неактивности.
 
-remote_name_enter=[@] Ты ещё не поставил себе имя!\n\n\
+remote_name_enter=[@] Для начала тебе надо поставить имя!\n\n\
 Нажми на кнопку ниже и введи своё имя, чтобы установить его.\n\
 Ты сможешь поменять его в любой момент.\n\n\
 После установки имени, введи <b>/login</b> снова.
@@ -72,6 +74,12 @@ callback_err_remote_path_blocked=❌ Что-то мешает вам пройт�
 callback_err_remote_collision=❌ Туда нельзя пойти!
 callback_err_remote_not_breakable=❌ Это нельзя ломать!
 callback_err_remote_other=❌ ...
+callback_err_remote_no_item_selected=❌ Предмет не выбран!
+callback_err_remote_not_edible=❌ Это нельзя есть!
+callback_err_remote_occupied=❌ Тут уже что-то стоит!
+callback_err_remote_item_not_chosen=❌ Выбери предмет который нужно поставить!
+callback_err_remote_item_not_placeable=❌ Выбранный предмет нельзя ставить!
+callback_err_remote_too_far_away=❌ Слишком далеко!
 
 remote_afk_warning=⌛ Выход через <b>{left}с</b> за AFK...
 
@@ -82,14 +90,20 @@ remote_inventory_title=🎒 <i>Инвентарь (<b>{items}</b>)</i>
 
 remote_daydreaming_title=💤 <i>В мечтах...</i>
 
+remote_inventory_no_item_selected=🎒 Нажми на кнопку для выбора предмета.\n\
+Нужно, чтобы его можно было <i>ставить</i>!
+
 button_remote_logout=🚪 Выйти
 button_remote_type_True=🔘 Пульт
 button_remote_type_False=🏞 Мир
 button_remote_chat=💬 Чат
 button_remote_break=👊 Ломать
+button_remote_place=👆 Ставить
+button_remote_place_choose_item=🎒 Выбрать...
 button_remote_inventory=🎒 Инвентарь
 button_remote_daydream=💤 Мечтать
 buttom_remote_stop_daydream=💤 Проснуться
+button_remote_eat=🍴 Съесть ({energy} ⚡)
 
 remote_stats_text=Позиция: <code>{x}</code>, <code>{y}</code>
 
@@ -109,3 +123,19 @@ inline_name_change_entered_desc=Нажми здесь, чтобы установ
 inline_name_change_long_title=👇 Это имя слишком длинное!
 inline_name_change_long_desc=Максимальная длина - {max} символов
 inline_name_changed=[@] Имя изменено на {name}!
+
+##### items #####
+
+item_desc=<i>{emoji} {name}</i> (<b>{amount}</b>)\n\
+⚖ {one_weight} × {amount} = <b>{weight}</b>
+item_tag_placeable=<i>Можно ставить</i>
+
+item_log=Бревно
+item_leaves=Листья
+item_green_apple=Зеленое яблоко
+item_red_apple=Красное яблоко
+item_dead_squirrel=Трупик белки
+item_stone=Камень
+item_amanita=Мухомор
+item_mushroom=Гриб
+item_stick=Палка

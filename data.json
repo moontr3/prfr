@@ -12,6 +12,21 @@
                     "item": "leaves",
                     "amount": [1,5],
                     "chance": 0.8
+                },
+                {
+                    "item": "green_apple",
+                    "amount": [1,2],
+                    "chance": 0.2
+                },
+                {
+                    "item": "red_apple",
+                    "amount": [1,2],
+                    "chance": 0.2
+                },
+                {
+                    "item": "dead_squirrel",
+                    "amount": 1,
+                    "chance": 0.01
                 }
             ],
             "durability": 10,
@@ -29,9 +44,31 @@
                     "item": "leaves",
                     "amount": [1,5],
                     "chance": 0.8
+                },
+                {
+                    "item": "green_apple",
+                    "amount": [1,2],
+                    "chance": 0.2
+                },
+                {
+                    "item": "red_apple",
+                    "amount": [1,2],
+                    "chance": 0.2
+                },
+                {
+                    "item": "dead_squirrel",
+                    "amount": 1,
+                    "chance": 0.02
                 }
             ],
             "durability": 10,
+            "collision": true
+        },
+        "stone": {
+            "emoji": "🪨",
+            "color": [128, 128, 128],
+            "drops": [ {"item": "stone"} ],
+            "durability": 4,
             "collision": true
         },
         "log": {
@@ -40,6 +77,20 @@
             "drops": [ {"item": "log"} ],
             "durability": 5,
             "collision": true
+        },
+        "amanita": {
+            "emoji": "🍄",
+            "color": [227, 64, 45],
+            "drops": [ {"item": "amanita"} ],
+            "durability": 2,
+            "collision": false
+        },
+        "mushroom": {
+            "emoji": "🍄‍🟫",
+            "color": [163, 81, 46],
+            "drops": [ {"item": "mushroom"} ],
+            "durability": 2,
+            "collision": false
         },
         "seed": {
             "emoji": "🌱",
@@ -72,8 +123,41 @@
             "weight": 10,
             "block": "log"
         },
+        "stone": {
+            "emoji": "🪨",
+            "weight": 5,
+            "block": "stone"
+        },
         "leaves": {
             "emoji": "🍂"
+        },
+        "green_apple": {
+            "emoji": "🍏",
+            "weight": 1,
+            "food": [5,15]
+        },
+        "red_apple": {
+            "emoji": "🍎",
+            "weight": 1,
+            "food": [5,15]
+        },
+        "dead_squirrel": {
+            "emoji": "🐿",
+            "weight": 3,
+            "food": [35,50]
+        },
+        "amanita": {
+            "emoji": "🍄",
+            "weight": 2
+        },
+        "mushroom": {
+            "emoji": "🍄‍🟫",
+            "weight": 2,
+            "food": [3,5]
+        },
+        "stick": {
+            "emoji": "🥢",
+            "weight": 0
         }
     }
 }

@@ -88,7 +88,8 @@ class User:
         energy: int = DEFAULT_ENERGY,
         max_energy: int = DEFAULT_MAX_ENERGY,
         max_weight: int = DEFAULT_MAX_WEIGHT,
-        inventory: Dict[str, int] = {}
+        inventory: Dict[str, int] = {},
+        skin: str = DEFAULT_SKIN
     ):
         '''
         A user entry in a database
@@ -100,6 +101,7 @@ class User:
         self.balance: int = balance
         self.started_playing: int = started_playing if started_playing else time.time()
         self.remote: bool = remote
+        self.skin: str = skin
         
         self.pos: Tuple[int,int] = pos
         self.game_name: str | None = game_name
@@ -111,7 +113,7 @@ class User:
 
     @property
     def avatar(self) -> str:
-        return '👶'
+        return self.skin
 
     @property
     def pb_style(self) -> str:
@@ -123,6 +125,11 @@ class User:
         Returns the player's name to display in lists etc.
         '''
         return f'{self.avatar} {self.game_name}'
+
+    def get_energy_pb(self) -> str:
+        return utils.progress_bar(
+            self.energy, self.max_energy, '⚡', self.pb_style
+        )
     
 
     def add_to_inventory(self, item: str, amount: int):
@@ -159,7 +166,8 @@ class User:
             "energy": self.energy,
             "max_energy": self.max_energy,
             "max_weight": self.max_weight,
-            "inventory": self.inventory
+            "inventory": self.inventory,
+            "skin": self.skin
         }
     
 
@@ -370,6 +378,9 @@ class Item:
         self.key: str = key
         self.emoji: str = data.get('emoji', '❓')
         self.weight: int = data.get('weight', 0)
+        food = data.get('food', None)
+        self.food: Range | None = Range(food) if food else None
+        self.block: str | None = data.get('block', None)
 
 
 class ItemLib:
@@ -414,6 +425,7 @@ class Remote:
         self.acquired_items: Dict[Item, int] = {}
         self.daydreaming: bool = False
         self.daydream_energy_time: float = time.time()
+        self.tick: int = 0
 
 
     def update_last_activity(self):
@@ -629,7 +641,9 @@ class Manager:
         self.commit()
 
 
-    def get_player_overlay(self, topleft: Tuple[int,int], size: Tuple[int,int]) -> List[List[str | None]]:
+    def get_player_overlay(self,
+        topleft: Tuple[int,int], size: Tuple[int,int], tick: int = 0
+    ) -> List[List[str | None]]:
         '''
         Returns an overlay of players as a matrix,
         where None is a transparent tile and a str is a player.
@@ -663,8 +677,14 @@ class Manager:
             for col in row:
                 if len(col) == 0:
                     outrow.append(None)
+
                 elif len(col) == 1:
-                    outrow.append(col[0].avatar)
+                    avatar = col[0].avatar
+                    if self.remotes[col[0].id].daydreaming and tick%2 == 0:
+                        avatar = '💤'
+
+                    outrow.append(avatar)
+
                 else:
                     outrow.append(utils.int_to_emoji(len(col)))
 
@@ -674,6 +694,8 @@ class Manager:
     
 
     def remote_tick(self, user: User, remote: Remote):
+        remote.tick += 1
+
         # daydreaming xp
         if remote.daydreaming:
             if time.time()-remote.daydream_energy_time > DAYDREAM_ENERGY_EVERY_SECONDS:
@@ -682,7 +704,18 @@ class Manager:
                 if user.energy < user.max_energy:
                     user.energy += 1
 
+                self.commit()
                 remote.update_last_activity()
+
+
+    def eat_item(self, user: User, item: InvItem):
+        energy = item.item.food.get()
+
+        user.energy += energy
+        user.energy = min(user.max_energy, user.energy)
+        user.remove_from_inventory(item.key, 1)
+
+        self.commit()
 
 
     def check_remote(self, id:int, action: bool = True, daydream: bool = False):
@@ -863,6 +896,55 @@ class Manager:
         else:
             remote.durability_item = target_tile
             remote.durability_current = map_tile.durability
+
+        self.map.save_chunk(chunk, chunk_data)
+        self.commit()
+
+        remote.update_last_activity()
+
+
+    def place(self, id:int, offsetx:int, offsety:int):
+        user = self.get_user(id)
+        remote = self.remotes[id]
+
+        # checking distance
+        if abs(offsetx) > 2 or abs(offsety) > 2:
+            return 'callback_err_remote_too_far_away'
+
+        # checking tile
+        target_pos = utils.move(user.pos, offsetx, offsety, self.map.size)
+        
+        chunk = [
+            int(target_pos[0]/self.map.chunk_size),
+            int(target_pos[1]/self.map.chunk_size)
+        ]
+        pos_in_chunk = [
+            target_pos[0]%self.map.chunk_size,
+            target_pos[1]%self.map.chunk_size
+        ]
+        chunk_data = self.map.get_chunk(chunk)
+        map_tile: MapObject = chunk_data[pos_in_chunk[1]][pos_in_chunk[0]]
+        target_tile = self.obj.get(map_tile.obj)
+
+        if not map_tile.isair and not target_tile.fluid:
+            return 'callback_err_remote_occupied'
+        
+        # checking selected object
+        inv = self.get_inventory(user)
+        selected = None
+
+        for item in inv:
+            if item.key == remote.inv_selected and item.item.block:
+                selected = item
+
+        if selected == None:
+            return 'callback_err_remote_item_not_chosen'
+        if not selected.item.block:
+            return 'callback_err_remote_item_not_placeable'
+
+        # placing
+        chunk_data[pos_in_chunk[1]][pos_in_chunk[0]] = MapObject(selected.key)
+        user.remove_from_inventory(selected.key, 1)
 
         self.map.save_chunk(chunk, chunk_data)
         self.commit()

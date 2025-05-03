@@ -100,16 +100,14 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
     if remote.daydreaming:
         text += l.f('remote_daydreaming_title')
 
-        text += '\n'+utils.progress_bar(
-            user.energy, user.max_energy, '⚡', user.pb_style
-        )
+        text += '\n'+user.get_energy_pb()
         return text
 
     # minimap
-    if remote.menu in [None, 'break']:
+    if remote.menu in [None, 'break', 'place']:
         data = mg.map.get_rect_around(user.pos, 4)
         topleft = [user.pos[0]-4, user.pos[1]-4]
-        overlay = mg.get_player_overlay(topleft, (9,9))
+        overlay = mg.get_player_overlay(topleft, (9,9), remote.tick)
 
         for y, row in enumerate(data):
             outrow = ''
@@ -122,15 +120,25 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
         
             text += f'{outrow}\n'
 
+    # place menu
+    if remote.menu == 'place':
+        inv = mg.get_inventory(user)
+        selected = None
+
+        for item in inv:
+            if item.key == remote.inv_selected and item.item.block:
+                selected = item
+
+        if selected == None:
+            text += '\n\n'+l.f('remote_inventory_no_item_selected')
+
     # stats
     if remote.menu == None:
         text += '\n'+l.f('remote_stats_text', x=user.pos[0], y=user.pos[1])
 
     # energy bar
     if remote.menu in [None, 'break']:
-        text += '\n'+utils.progress_bar(
-            user.energy, user.max_energy, '⚡', user.pb_style
-        )
+        text += '\n'+user.get_energy_pb()
 
     # durability info
     if remote.menu == 'break':
@@ -175,6 +183,21 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
         text += '\n'+utils.progress_bar(
             weight, user.max_weight, '⚖', user.pb_style
         )
+
+        # info about selected item
+        selitem = [i for i in inv if i.key == remote.inv_selected]
+
+        if selitem:
+            selitem = selitem[0]
+
+            text += f'\n\n'+l.f(
+                'item_desc',
+                emoji=selitem.item.emoji, name=l.f(f'item_{selitem.key}'),
+                amount=selitem.amount, weight=selitem.weight, one_weight=selitem.item.weight
+            )
+
+            if selitem.item.block:
+                text += '\n'+l.f('item_tag_placeable')
 
     # remote timeout warning
     if time.time()-remote.last_activity > MAX_AFK_TIME_SECONDS-15:
@@ -228,6 +251,9 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
         kb.row(types.InlineKeyboardButton(
             text=l.f('button_remote_break'), callback_data='menu:break'
         ))
+        kb.add(types.InlineKeyboardButton(
+            text=l.f('button_remote_place'), callback_data='menu:place'
+        ))
 
         kb.row(types.InlineKeyboardButton(
             text=l.f('button_remote_inventory'), callback_data='menu:inventory'
@@ -261,6 +287,8 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
 
                 if x != 0 and y != 0:
                     text = '▪'
+                elif x == 0 and y == 0:
+                    text = user.avatar
                 else:
                     text = mg.obj.get(item.obj).button_text
 
@@ -278,16 +306,81 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
     # inventory
     elif remote.menu == 'inventory':
         inv = mg.get_inventory(user)
+        selected = None
 
         for item in inv:
             text = item.item.emoji+utils.to_superscript(str(item.amount))
             text = f'[{text}]' if item.key == remote.inv_selected else text
+            if item.key == remote.inv_selected:
+                selected = item
 
             kb.add(types.InlineKeyboardButton(
                 text=text, callback_data=f'selectitem:{item.key}'
             ))
 
-        kb.adjust(5, repeat=True)
+        while len(list(kb.buttons)) % 4 != 0:
+            kb.add(types.InlineKeyboardButton(
+                text=' ', callback_data='discard'
+            ))
+
+        kb.adjust(4, repeat=True)
+
+        # selected item actions
+        if selected:
+            if selected.item.food:
+                kb.row(types.InlineKeyboardButton(
+                    text=l.f('button_remote_eat', energy=str(selected.item.food)),
+                    callback_data=f'itemaction:eat'
+                ))
+            if selected.item.block:
+                kb.row(types.InlineKeyboardButton(
+                    text=l.f('button_remote_place'), callback_data='menu:place'
+                ))
+
+        # options buttons
+        kb.row(types.InlineKeyboardButton(
+            text=l.f('general_back'), callback_data='menu:None'
+        ))
+
+    # block placement
+    elif remote.menu == 'place':
+        data = mg.map.get_rect_around(user.pos, 2)
+        topleft = [-2,-2]
+
+        for y, row in enumerate(data):
+            buttons = []
+            y = topleft[1]+y
+
+            for x, item in enumerate(row):
+                x = topleft[0]+x
+                
+                if x == 0 and y == 0:
+                    text = user.avatar
+                else:
+                    text = mg.obj.get(item.obj).button_text
+
+                buttons.append(types.InlineKeyboardButton(
+                    text=text, callback_data=f'place:{x}:{y}'
+                ))
+
+            kb.row(*buttons)
+
+        # inventory button
+        inv = mg.get_inventory(user)
+        selected = None
+
+        for item in inv:
+            if item.key == remote.inv_selected and item.item.block:
+                selected = item
+
+        if selected:
+            text = f'{selected.item.emoji} {l.f(f"item_{selected.key}")} ›' 
+        else:
+            text = l.f('button_remote_place_choose_item')
+
+        kb.row(types.InlineKeyboardButton(
+            text=text, callback_data='menu:inventory'
+        ))
 
         # options buttons
         kb.row(types.InlineKeyboardButton(
@@ -319,16 +412,44 @@ async def change_remote_type(call: types.callback_query):
 
 
 @dp.callback_query(F.data == 'daydream')
-async def change_remote_type(call: types.callback_query):
+async def start_daydream(call: types.callback_query):
     user = mg.get_user(call.from_user)
     l = mg.get_locale(user.lang)
 
     out = mg.check_remote(user.id, daydream=True)
     if out != True: return await call.answer(l.f(out))
 
-    # changing type
+    # daydreaming
     remote = mg.remotes[call.from_user.id]
     remote.switch_daydreaming()
+    await call.answer()
+
+
+@dp.callback_query(F.data.startswith('itemaction:'))
+async def eat_selected_item(call: types.callback_query):
+    user = mg.get_user(call.from_user)
+    l = mg.get_locale(user.lang)
+    args = call.data.split(':')
+
+    out = mg.check_remote(user.id, daydream=True)
+    if out != True: return await call.answer(l.f(out))
+
+    # getting item
+    remote = mg.remotes[call.from_user.id]
+    inv = mg.get_inventory(user)
+    item = [i for i in inv if i.key == remote.inv_selected]
+    if len(item) == 0:
+        return await call.answer(l.f('callback_err_remote_no_item_selected'))
+    item = item[0]
+
+    # eating
+    if args[1] == 'eat':
+        if not item.item.food:
+            return await call.answer(l.f('callback_err_remote_not_edible'))
+        
+        mg.eat_item(user, item)
+        return await call.answer(user.get_energy_pb())
+
     await call.answer()
 
 
@@ -417,6 +538,25 @@ async def break_object(call: types.callback_query):
     await call.answer()
 
 
+@dp.callback_query(F.data.startswith('place:'))
+async def place_object(call: types.callback_query):
+    user = mg.get_user(call.from_user)
+    l = mg.get_locale(user.lang)
+    args = call.data.split(':')
+
+    out = mg.check_remote(user.id)
+    if out != True: return await call.answer(l.f(out))
+
+    # breaking
+    x = int(args[1])
+    y = int(args[2])
+
+    out = mg.place(call.from_user.id, x, y)
+    if out: return await call.answer(l.f(out))
+
+    await call.answer()
+
+
 # remote loop
 
 async def run_remote_cycle(userid: int):
@@ -436,7 +576,7 @@ async def run_remote_cycle(userid: int):
             break
 
         # waiting until editing message
-        await asyncio.sleep(1)
+        await asyncio.sleep(1.05)
         mg.remote_tick(user, remote)
 
         # getting new message contents
@@ -490,11 +630,12 @@ async def remote(msg: types.Message):
         return
 
     # starting remote cycle
+    mg.remotes[msg.from_user.id] = api.Remote(None, msg.from_user.id)
     await msg.delete()
     botmsg = await bot.send_message(msg.chat.id, l.f('general_loading'))
     log(f'{user.game_name} ({user.id}) logged in!')
 
-    mg.remotes[msg.from_user.id] = api.Remote(botmsg, msg.from_user.id)
+    mg.remotes[msg.from_user.id].message = botmsg
     mg.broadcast_user('chat_user_joined', msg.from_user.id)
     await run_remote_cycle(msg.from_user.id)
     del mg.remotes[msg.from_user.id]
@@ -522,6 +663,22 @@ async def status(msg: types.Message):
     await msg.reply(text)
 
 
+@dp.message(Command('logout'))
+async def logout(msg: types.Message):
+    '''
+    quit the world.
+    '''
+    user = mg.get_user(msg.from_user)
+    l = mg.get_locale(user.lang)
+
+    if user.id not in mg.remotes:
+        await msg.reply(l.f('err_logout_no_remote'))
+        return
+    
+    mg.remotes[user.id].running = False
+    await msg.delete()
+
+
 @dp.message()
 async def ingamechat(msg: types.Message):
     '''
@@ -535,5 +692,9 @@ async def ingamechat(msg: types.Message):
     if msg.from_user.id not in mg.remotes: return
 
     await msg.delete()
+
     if msg.text.startswith('φ'): return
+    remote = mg.remotes[msg.from_user.id]
+    if remote.daydreaming: return
+
     mg.send_to_chat(l, user.id, msg.text)
