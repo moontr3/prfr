@@ -5,6 +5,7 @@ English
 
 !CUR=₪
 !@=<code>φ</code>
+@=φ
 !x=<code>X</code>
 
 dy=dy
@@ -46,6 +47,14 @@ Started playing: <b>{time} ago</b>
 
 ##### remotes #####
 
+remote_error=[x] <i>Error!</i>\n\
+\n\
+An error was found during your game session.\n\
+You have been disconnected from the world, but you can rejoin again anytime with <b>/login</b>.\n\
+\n\
+And here's the error itself:\n\
+<code>{error}</code>
+
 status_text=[@] <i>Server status:</i>
 status_desc_players_online=Online players (<code>{online}</code>):
 status_desc_no_players_online=<i>No one is playing right now...</i>
@@ -81,6 +90,7 @@ callback_err_remote_item_not_chosen=❌ Choose an item to place!
 callback_err_remote_item_not_placeable=❌ You can't place the selected item!
 callback_err_remote_too_far_away=❌ Too far away!
 callback_err_remote_player_there=❌ Someone is standing there!
+callback_err_remote_short_on_items=❌ You're short on some items!
 
 remote_afk_warning=⌛ Logging out in <b>{left}s</b> due to AFKing...
 
@@ -94,17 +104,27 @@ remote_daydreaming_title=💤 <i>Daydreaming...</i>
 remote_inventory_no_item_selected=🎒 Click on the button to choose an item.\n\
 Make sure it is <i>placeable</i>!
 
-button_remote_logout=🚪 Leave
-button_remote_type_True=🔘 Remote
-button_remote_type_False=🏞 World
-button_remote_chat=💬 Chat
+remote_handiwork_title=🛠 <i>Handiwork</i>
+remote_handiwork_search_title=🛠 Click on the button to choose an item to make.
+remote_handiwork_made_item=Made {item} <b>×{amount}</b>\n\
+<i>Now you have ×{in_inv}</i>
+
+button_remote_logout=🚪
+button_remote_type_True=🔘
+button_remote_type_False=🏞
+button_remote_chat=💬
+button_remote_server=👤
+button_remote_daydream=💤
 button_remote_break=👊 Break
 button_remote_place=👆 Place
+button_remote_handiwork=🛠 Handiwork
 button_remote_place_choose_item=🎒 Choose item...
 button_remote_inventory=🎒 Inventory
-button_remote_daydream=💤 Daydream
-buttom_remote_stop_daydream=💤 Wake up
+button_remote_stop_daydream=💤 Wake up
 button_remote_eat=🍴 Eat ({energy} ⚡)
+button_remote_handiwork_search=🛠 Search...
+button_remote_make=🛠 Make
+button_remote_make_energy=🛠 Make (-{energy} ⚡)
 
 remote_stats_text=Position: <code>{x}</code>, <code>{y}</code>
 
@@ -114,9 +134,11 @@ chat_user_joined=🚪 <i>{user} logged in!</i>
 chat_user_left=🚪 <i>{user} logged out...</i>
 chat_but_no_one_came=<i>*️⃣ But no one came...</i>
 
-##### name changer #####
+##### inline #####
 
 inline_unknown_command=❌ ...
+inline_not_logged_in_title=❌ You are not logged in!
+inline_not_logged_in_desc=Enter /login in the bot's DMs and try again.
 
 inline_name_change_title=👇 Enter your new name below...
 inline_name_change_entered_title=👇 Set your name as {name}?
@@ -124,6 +146,12 @@ inline_name_change_entered_desc=Press here to set!
 inline_name_change_long_title=👇 This name is too long!
 inline_name_change_long_desc=Maximum length - {max} characters
 inline_name_changed=[@] Name set to {name}!
+
+inline_handiwork_title=👇 Available items: {items}
+inline_handiwork_desc=Enter text to search ・ Write a number to change the page
+inline_handiwork_no_items_title=❌ You can't make anything right now!
+inline_handiwork_requires=For {items}
+inline_handiwork_action=[@] Making {item}...
 
 ##### items #####
 
@@ -168,3 +196,16 @@ item_gem=Gemstone
 item_desc_gem=Nacre roundstone is still better!
 item_nacre=Nacre roundstone
 item_desc_nacre=One of the most valuable things in the game.
+item_wood_block=Wood block
+item_door=Door
+item_desc_door=A sturdy wooden door. Good for housing.
+
+##### notice #####
+
+button_remote_notice=ℹ️ Notices
+notice=ℹ️ <i>Notices</i>\n\
+\n\
+•  <b>Project Freeroam</b> is currently in alpha.\n\
+   A lot of features you may expect are probably already planned.\n\
+\n\
+•  ⚠ Map (rarely user stats and other info too) may reset at any time.

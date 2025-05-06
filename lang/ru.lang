@@ -5,6 +5,7 @@
 
 !CUR=₪
 !@=<code>φ</code>
+@=φ
 !x=<code>X</code>
 
 dy=дн
@@ -46,6 +47,14 @@ me_stats=\
 
 ##### remotes #####
 
+remote_error=[x] <i>Ошибка!</i>\n\
+\n\
+Во время твоей игровой сессии была обнаружена ошибка.\n\
+Ты вышел из мира, но ты можешь зайти снова в любой момент, введя <b>/login</b>.\n\
+\n\
+А вот и сама ошибка:\n\
+<code>{error}</code>
+
 status_text=[@] <i>Статус сервера:</i>
 status_desc_players_online=Игроки онлайн (<code>{online}</code>):
 status_desc_no_players_online=<i>Сейчас никто не играет...</i>
@@ -81,6 +90,7 @@ callback_err_remote_item_not_chosen=❌ Выбери предмет которы
 callback_err_remote_item_not_placeable=❌ Выбранный предмет нельзя ставить!
 callback_err_remote_too_far_away=❌ Слишком далеко!
 callback_err_remote_player_there=❌ Тут кто-то стоит!
+callback_err_remote_short_on_items=❌ Не хватает некоторых предметов!
 
 remote_afk_warning=⌛ Выход через <b>{left}с</b> за AFK...
 
@@ -94,17 +104,27 @@ remote_daydreaming_title=💤 <i>В мечтах...</i>
 remote_inventory_no_item_selected=🎒 Нажми на кнопку для выбора предмета.\n\
 Нужно, чтобы его можно было <i>ставить</i>!
 
-button_remote_logout=🚪 Выйти
-button_remote_type_True=🔘 Пульт
-button_remote_type_False=🏞 Мир
-button_remote_chat=💬 Чат
+remote_handiwork_title=🛠 <i>Рукоделие</i>
+remote_handiwork_search_title=🛠 Нажми на кнопку для выбора предмета для создания.
+remote_handiwork_made_item=Сделано {item} <b>×{amount}</b>\n\
+<i>Теперь у вас ×{in_inv}</i>
+
+button_remote_logout=🚪
+button_remote_type_True=🔘
+button_remote_type_False=🏞
+button_remote_chat=💬
+button_remote_server=👤
+button_remote_daydream=💤
 button_remote_break=👊 Ломать
 button_remote_place=👆 Ставить
+button_remote_handiwork=🛠 Рукоделие
 button_remote_place_choose_item=🎒 Выбрать...
 button_remote_inventory=🎒 Инвентарь
-button_remote_daydream=💤 Мечтать
-buttom_remote_stop_daydream=💤 Проснуться
+button_remote_stop_daydream=💤 Проснуться
 button_remote_eat=🍴 Съесть ({energy} ⚡)
+button_remote_handiwork_search=🛠 Поиск...
+button_remote_make=🛠 Сделать
+button_remote_make_energy=🛠 Сделать (-{energy} ⚡)
 
 remote_stats_text=Позиция: <code>{x}</code>, <code>{y}</code>
 
@@ -114,9 +134,11 @@ chat_user_joined=🚪 <i>{user} присоединился!</i>
 chat_user_left=🚪 <i>{user} вышел...</i>
 chat_but_no_one_came=<i>*️⃣ Но никто не пришел...</i>
 
-##### name changer #####
+##### inline #####
 
 inline_unknown_command=❌ ...
+inline_not_logged_in_title=❌ Ты не вошёл!
+inline_not_logged_in_desc=Введи /login в ЛС бота и попробуй ещё раз.
 
 inline_name_change_title=👇 Введи свое новое имя ниже...
 inline_name_change_entered_title=👇 Установить имя {name}?
@@ -124,6 +146,12 @@ inline_name_change_entered_desc=Нажми здесь, чтобы установ
 inline_name_change_long_title=👇 Это имя слишком длинное!
 inline_name_change_long_desc=Максимальная длина - {max} символов
 inline_name_changed=[@] Имя изменено на {name}!
+
+inline_handiwork_title=👇 Доступно предметов: {items}
+inline_handiwork_desc=Введи текст для поиска ・ Напиши число для изменения страницы
+inline_handiwork_no_items_title=❌ Вы не можете ничего сделать!
+inline_handiwork_requires=Нужно {items}
+inline_handiwork_action=[@] Делаем {item}...
 
 ##### items #####
 
@@ -161,10 +189,23 @@ item_desc_emerald=Хм-хм! *звуки жителя 👃*
 item_gold=Золотой круглокамень
 item_desc_gold=Он точно должен стоить больше 3 [CUR]!
 item_ruby=Рубиновый круглокамень
-item_desc_ruby=У этого есть края! Не сильно круглый круглокамень...
+item_desc_ruby=Не сильно круглый круглокамень...
 item_quartz=Кварцевый круглокамень
 item_desc_quartz=Странный круглокамень. Тебе не нравится.
 item_gem=Бриллиант
 item_desc_gem=Перламутровый круглокамень всё равно лучше!
 item_nacre=Перламутровый круглокамень
 item_desc_nacre=Одна из самых дорогих вещей в игре.
+item_wood_block=Блок дерева
+item_door=Дверь
+item_desc_door=Крепкая деревянная дверь. Подойдёт для домов.
+
+##### notice #####
+
+button_remote_notice=ℹ️ Информация
+notice=ℹ️ <i>Информация</i>\n\
+\n\
+•  На данный момент <b>Project Freeroam</b> находится в альфа-версии.\n\
+   Большинство вещей, которые вы можете ждать, скорее всего уже запланированы.\n\
+\n\
+•  ⚠ Карта (редко информация и статистика пользователей) может сброситься в любое время.

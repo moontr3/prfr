@@ -392,7 +392,7 @@ class ItemLib:
         self.data: Dict[str, Dict] = {k: Item(k, v) for k, v in data.items()}
 
 
-    def get(self, key: str) -> Object:
+    def get(self, key: str) -> Item:
         '''
         Returns an item by its key.
         '''
@@ -400,6 +400,57 @@ class ItemLib:
             return self.data[key]
         
         return Item(key, {})
+
+
+# inventory
+
+class InvItem:
+    def __init__(self, key: str, amount: int, item: Item):
+        '''
+        A slot of items in the inventory.
+        '''
+        self.key: str = key
+        self.amount: int = amount
+        self.item: Item = item
+
+        self.weight: int = self.amount*self.item.weight
+
+
+# recipe library
+
+class Recipe:
+    def __init__(self, data: Dict):
+        '''
+        Represents a recipe.
+        '''
+        self.requires: Dict[str, int] = data['req']
+        self.gives: str = data['gives']
+        self.amount: int = data.get('amount', 1)
+        self.energy: int = data.get('energy', 0)
+
+
+class RecipeLib:
+    def __init__(self, data: List[Dict]): 
+        '''
+        Library of recipes.
+        '''
+        self.data: List[Recipe] = [Recipe(v) for v in data]
+
+
+    def get_craftable(self, inv: Dict[str, int]) -> List[Recipe]:
+        '''
+        Searches recipes and only returns the ones that are craftable
+        with the passed in inventory.
+        '''
+        out = []
+
+        for i in self.data:
+            for key, amount in i.requires.items():
+                if key in inv and inv[key] >= amount:
+                    out.append(i)
+                    break
+                
+        return out
 
 
 # remotes
@@ -427,6 +478,9 @@ class Remote:
         self.daydreaming: bool = False
         self.daydream_energy_time: float = time.time()
         self.tick: int = 0
+        self.hw_item: int | None = None
+        self.hw_made_item: Item | None = None
+        self.hw_made_amount: int | None = None
 
 
     def update_last_activity(self):
@@ -443,6 +497,8 @@ class Remote:
         self.durability_item = None
         self.durability_current = None
         self.acquired_items: Dict[Item, int] = {}
+        self.hw_made_item = None
+        self.hw_made_amount = None
 
 
     def switch_daydreaming(self):
@@ -453,20 +509,6 @@ class Remote:
 
         if self.daydreaming:
             self.daydream_energy_time = time.time()
-
-
-# inventory
-
-class InvItem:
-    def __init__(self, key: str, amount: int, item: Item):
-        '''
-        A slot of items in the inventory.
-        '''
-        self.key: str = key
-        self.amount: int = amount
-        self.item: Item = item
-
-        self.weight: int = self.amount*self.item.weight
 
 
 # main manager
@@ -552,6 +594,7 @@ class Manager:
         self.data = data
         self.obj: ObjectLib = ObjectLib(data['obj'])
         self.item: ItemLib = ItemLib(data['item'])
+        self.recipe: RecipeLib = RecipeLib(data['recipes'])
 
         self.locales: Dict[str, Locale] = {}
 
@@ -681,7 +724,7 @@ class Manager:
 
                 elif len(col) == 1:
                     avatar = col[0].avatar
-                    if self.remotes[col[0].id].daydreaming and tick%2 == 0:
+                    if self.remotes[col[0].id].daydreaming:
                         avatar = '💤'
 
                     outrow.append(avatar)
@@ -740,6 +783,13 @@ class Manager:
         user = self.get_user(id)
         log(f'{user.game_name} ({user.id}) changed name to {name}')
         user.game_name = name
+        self.commit()
+    
+
+    def set_handiwork_item(self, id:int, item:str):
+        remote = self.remotes[id]
+        remote.hw_item = item
+        remote.menu = 'handiwork'
         self.commit()
     
 
@@ -959,6 +1009,35 @@ class Manager:
         self.map.save_chunk(chunk, chunk_data)
         self.commit()
 
+        remote.update_last_activity()
+
+
+    def make_item(self, user: User, recipe: Recipe):
+        remote = self.remotes[user.id]
+
+        # checking
+        if user.energy < recipe.energy:
+            return 'callback_err_remote_not_enough_energy'
+
+        for i, amount in recipe.requires.items():
+            if i not in user.inventory or user.inventory[i] < amount:
+                return 'callback_err_remote_short_on_items'
+
+        # making
+        gives = self.item.get(recipe.gives)
+        if not remote.hw_made_item or remote.hw_made_item.key != recipe.gives:
+            remote.hw_made_item = gives
+            remote.hw_made_amount = 0
+
+        remote.hw_made_amount += recipe.amount
+
+        user.energy -= recipe.energy
+        
+        for i, amount in recipe.requires.items():
+            user.remove_from_inventory(i, amount)
+        user.add_to_inventory(recipe.gives, recipe.amount)
+
+        self.commit()
         remote.update_last_activity()
 
 

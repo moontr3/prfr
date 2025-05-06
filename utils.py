@@ -11,13 +11,13 @@ def move(pos: Tuple[int,int], x: int, y: int, mapsize: Tuple[int,int]) -> Tuple[
     target_pos[0] += x
     target_pos[1] += y
 
-    if target_pos[0] > mapsize[0]:
+    if target_pos[0] >= mapsize[0]:
         target_pos[0] -= mapsize[0]
-    if target_pos[1] > mapsize[1]:
+    if target_pos[1] >= mapsize[1]:
         target_pos[1] -= mapsize[1]
 
-    if target_pos[1] < 0:
-        target_pos[1] += mapsize[0]
+    if target_pos[0] < 0:
+        target_pos[0] += mapsize[0]
     if target_pos[1] < 0:
         target_pos[1] += mapsize[1]
 

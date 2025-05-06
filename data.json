@@ -149,6 +149,19 @@
             "emoji": "🟦",
             "color": [54, 130, 255],
             "fluid": true
+        },
+        "wood_block": {
+            "emoji": "🟫",
+            "color": [150, 109, 90],
+            "drops": [ {"item": "wood_block"} ],
+            "collision": true,
+            "durability": 4
+        },
+        "door": {
+            "emoji": "🚪",
+            "color": [150, 109, 90],
+            "drops": [ {"item": "door"} ],
+            "durability": 10
         }
     },
     "item": {
@@ -222,16 +235,47 @@
         },
         "amanita": {
             "emoji": "🍄",
-            "weight": 2
+            "weight": 2,
+            "block": "amanita"
         },
         "mushroom": {
             "emoji": "🍄‍🟫",
             "weight": 2,
-            "food": [3,5]
+            "food": [3,5],
+            "block": "mushroom"
         },
         "stick": {
             "emoji": "🥢",
-            "weight": 0
+            "weight": 1
+        },
+        "wood_block": {
+            "emoji": "🟫",
+            "weight": 5,
+            "block": "wood_block"
+        },
+        "door": {
+            "emoji": "🚪",
+            "weight": 7,
+            "block": "door"
         }
-    }
+    },
+    "recipes": [
+        {
+            "req": { "log": 1 },
+            "gives": "stick",
+            "amount": 10
+        },
+        {
+            "req": { "log": 1 },
+            "gives": "wood_block",
+            "amount": 2,
+            "energy": 1
+        },
+        {
+            "req": { "stick": 2, "wood_block": 1 },
+            "gives": "door",
+            "amount": 1,
+            "energy": 5
+        }
+    ]
 }

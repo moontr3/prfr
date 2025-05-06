@@ -24,11 +24,19 @@ from .keyboards import *
 
 @dp.chosen_inline_result()
 async def inline_result(q: types.ChosenInlineResult):
-    if not q.result_id.startswith('namechange:'): return
+    # changing name
+    if q.result_id.startswith('namechange:'):
+        newname = q.result_id.removeprefix('namechange:')[:MAX_NAME_LENGTH]
+        newname = utils.demarkup(newname)
+        mg.change_game_name(q.from_user.id, newname)
 
-    newname = q.result_id.removeprefix('namechange:')[:MAX_NAME_LENGTH]
-    newname = utils.demarkup(newname)
-    mg.change_game_name(q.from_user.id, newname)
+    # setting hw item
+    if q.result_id.startswith('sethwitem:'):
+        item = int(q.result_id.removeprefix('sethwitem:'))
+        out = mg.check_remote(q.from_user.id)
+        if out != True:
+            return
+        mg.set_handiwork_item(q.from_user.id, item)
 
 
 @dp.inline_query()
@@ -40,13 +48,12 @@ async def inline(q: types.InlineQuery):
     query1 = q.query.split(' ')
 
     if len(query1) > 0 and query1[0].lower() in [
-        'name'
+        'name', 'hw'
     ]:
         key = query1[0].lower()
         query = ' '.join(query1[1:])
 
     else:
-        
         await q.answer([types.InlineQueryResultArticle(id='discard',
             title=l.f('inline_unknown_command'),
             input_message_content=types.InputTextMessageContent(
@@ -54,6 +61,18 @@ async def inline(q: types.InlineQuery):
             )
         )], cache_time=5, is_personal=True)
         return
+    
+    # checking for remote
+    if key in ['hw']:
+        if user.id not in mg.remotes:
+            await q.answer([types.InlineQueryResultArticle(id='discard',
+                title=l.f('inline_not_logged_in_title'),
+                description=l.f('inline_not_logged_in_desc'),
+                input_message_content=types.InputTextMessageContent(
+                    message_text=l.f('/login')
+                )
+            )], cache_time=1, is_personal=True)
+            return
 
     # name change query
     if key == 'name':
@@ -84,6 +103,56 @@ async def inline(q: types.InlineQuery):
             )
 
         await q.answer([button], cache_time=5, is_personal=True)
+        return
+
+    # crafting item choose
+    if key == 'hw':
+        items = mg.recipe.get_craftable(user.inventory)
+
+        if len(items) == 0:
+            await q.answer([types.InlineQueryResultArticle(id='discard',
+                title=l.f('inline_handiwork_no_items_title'),
+                input_message_content=types.InputTextMessageContent(
+                    message_text=l.f(f'inline_discard')
+                )
+            )], cache_time=1, is_personal=True)
+            return
+
+        buttons = [types.InlineQueryResultArticle(id=f'discard',
+            title=l.f('inline_handiwork_title', items=len(items)),
+            description=l.f('inline_handiwork_desc'),
+            input_message_content=types.InputTextMessageContent(
+                message_text=l.f(f'inline_discard')
+            )
+        )]
+
+        for index, i in enumerate(items):
+            gives = mg.item.get(i.gives)
+
+            if len(i.requires) > 1:
+                desc_items = []
+                for item, amount in i.requires.items():
+                    item = mg.item.get(item)
+                    desc_items.append(f'{item.emoji} {amount}')
+
+                desc = ' ・ '.join(desc_items)
+            else:
+                item, amount = list(i.requires.items())[0]
+                item = mg.item.get(item)
+                desc = f'{item.emoji} {l.f(f"item_{item.key}")} ({amount})'
+
+            buttons.append(types.InlineQueryResultArticle(id=f'sethwitem:{index}',
+                title=f'{gives.emoji} {l.f(f"item_{gives.key}")} ({i.amount})',
+                description=l.f('inline_handiwork_requires', items=desc),
+                input_message_content=types.InputTextMessageContent(
+                    message_text=l.f(
+                        f'inline_handiwork_action',
+                        item=f'{gives.emoji} {l.f(f"item_{gives.key}")}'
+                    )
+                )
+            ))
+        
+        await q.answer(buttons, cache_time=1, is_personal=True)
         return
     
 
@@ -154,12 +223,6 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
                 out.append(f'{item.emoji} +{amount}')
 
             text += '\n' + ' ・ '.join(out)
-    
-    # chat
-    if remote.menu == None:
-        text += '\n'
-        for i in remote.chat[-CHAT_HISTORY:]:
-            text += f'\n{i}'
 
     # chat history
     if remote.menu == 'chat':
@@ -170,6 +233,40 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
 
         for i in remote.chat[-CHAT_HISTORY_MENU:]:
             text += f'{i}\n'
+
+    # server info
+    if remote.menu == 'server':
+        text += get_server_status_text(l)
+
+    # handiwork title
+    if remote.menu == 'handiwork':
+        if remote.hw_item == None:
+            text += l.f('remote_handiwork_search_title')
+
+        else:
+            item = mg.recipe.data[remote.hw_item]
+            text += l.f('remote_handiwork_title')+'\n\n'
+            gives = mg.item.get(item.gives)
+
+            for i, amount in item.requires.items():
+                i = mg.item.get(i)
+                in_inv = user.inventory.get(i.key, 0)
+                if in_inv == 0:
+                    in_inv = f'{in_inv}❗'
+                text += f'{i.emoji} {l.f(f"item_{i.key}")} <b>×{amount}</b> <i>(🎒 {in_inv})</i>\n'
+
+            text += '—↓—↓—↓—\n'
+            text += f'{gives.emoji} {l.f(f"item_{gives.key}")} <b>×{item.amount}</b>'
+
+            if remote.hw_made_item:
+                itemname = f'{gives.emoji} {l.f(f"item_{gives.key}")}'
+                in_inv = user.inventory.get(gives.key, 0)
+                text += '\n\n'+l.f(
+                    'remote_handiwork_made_item',
+                    item=itemname, amount=item.amount, in_inv=in_inv
+                )
+
+            text += '\n\n'+user.get_energy_pb()
 
     # inventory title
     if remote.menu == 'inventory':
@@ -199,6 +296,17 @@ def get_remote_text(l: api.Locale, remote: api.Remote, user: api.User):
             if itemdesckey in l.strings:
                 text += f'\n<blockquote>{l.f(itemdesckey)}</blockquote>'
 
+    # notice
+    if remote.menu == 'notice':
+        text += l.f('notice')
+    
+    # chat
+    if remote.menu not in ['chat']:
+        text += '\n'
+        amount = CHAT_HISTORY if remote.menu == None else 1
+        for i in remote.chat[-amount:]:
+            text += f'\n{i}'
+
     # remote timeout warning
     if time.time()-remote.last_activity > MAX_AFK_TIME_SECONDS-15:
         text += '\n'+l.f('remote_afk_warning', left=15)
@@ -218,7 +326,7 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
     # back button
     if remote.daydreaming:
         kb.add(types.InlineKeyboardButton(
-            text=l.f('buttom_remote_stop_daydream'), callback_data='daydream'
+            text=l.f('button_remote_stop_daydream'), callback_data='daydream'
         ))
         return kb
 
@@ -259,18 +367,28 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
             text=l.f('button_remote_inventory'), callback_data='menu:inventory'
         ))
         kb.add(types.InlineKeyboardButton(
-            text=l.f('button_remote_daydream'), callback_data='daydream'
+            text=l.f('button_remote_handiwork'), callback_data='menu:handiwork'
         ))
 
         # options buttons
         kb.row(types.InlineKeyboardButton(
+            text=l.f('button_remote_daydream'), callback_data='daydream'
+        ))
+        kb.add(types.InlineKeyboardButton(
             text=l.f('button_remote_chat'), callback_data='menu:chat'
+        ))
+        kb.add(types.InlineKeyboardButton(
+            text=l.f('button_remote_server'), callback_data='menu:server'
         ))
         kb.add(types.InlineKeyboardButton(
             text=l.f(f'button_remote_type_{user.remote}'), callback_data='remotetype'
         ))
         kb.add(types.InlineKeyboardButton(
             text=l.f('button_remote_logout'), callback_data='logout'
+        ))
+
+        kb.row(types.InlineKeyboardButton(
+            text=l.f('button_remote_notice'), callback_data='menu:notice'
         ))
 
     # walking buttons
@@ -374,7 +492,7 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
                 selected = item
 
         if selected:
-            text = f'{selected.item.emoji} {l.f(f"item_{selected.key}")} ›' 
+            text = f'{selected.item.emoji} {l.f(f"item_{selected.key}")} ({selected.amount}) ›' 
         else:
             text = l.f('button_remote_place_choose_item')
 
@@ -384,6 +502,30 @@ def get_remote_kb(l: api.Locale, remote: api.Remote, user: api.User) -> InlineKe
 
         # options buttons
         kb.row(types.InlineKeyboardButton(
+            text=l.f('general_back'), callback_data='menu:None'
+        ))
+
+    # handiwork item search
+    elif remote.menu == 'handiwork':
+        if remote.hw_item != None:
+            item = mg.recipe.data[remote.hw_item]
+
+            for i, amount in item.requires.items():
+                if i in user.inventory and user.inventory[i] >= amount and item.energy <= user.energy:
+                    if item.energy == 0:
+                        text = l.f('button_remote_make')
+                    else:
+                        text = l.f('button_remote_make_energy', energy=item.energy)
+                        
+                    kb.row(types.InlineKeyboardButton(
+                        text=text, callback_data='makehwitem'
+                    ))
+                    break
+
+        kb.row(types.InlineKeyboardButton(
+            text=l.f('button_remote_handiwork_search'), switch_inline_query_current_chat='hw '
+        ))
+        kb.add(types.InlineKeyboardButton(
             text=l.f('general_back'), callback_data='menu:None'
         ))
 
@@ -426,12 +568,12 @@ async def start_daydream(call: types.callback_query):
 
 
 @dp.callback_query(F.data.startswith('itemaction:'))
-async def eat_selected_item(call: types.callback_query):
+async def item_action(call: types.callback_query):
     user = mg.get_user(call.from_user)
     l = mg.get_locale(user.lang)
     args = call.data.split(':')
 
-    out = mg.check_remote(user.id, daydream=True)
+    out = mg.check_remote(user.id)
     if out != True: return await call.answer(l.f(out))
 
     # getting item
@@ -450,6 +592,25 @@ async def eat_selected_item(call: types.callback_query):
         mg.eat_item(user, item)
         return await call.answer(user.get_energy_pb())
 
+    await call.answer()
+
+
+@dp.callback_query(F.data == 'makehwitem')
+async def make_hw_item(call: types.callback_query):
+    user = mg.get_user(call.from_user)
+    l = mg.get_locale(user.lang)
+
+    out = mg.check_remote(user.id)
+    if out != True: return await call.answer(l.f(out))
+
+    # getting recipe
+    remote = mg.remotes[call.from_user.id]
+    if remote.hw_item == None:
+        return await call.answer(l.f('callback_err_remote_no_item_selected'))
+
+    out = mg.make_item(user, mg.recipe.data[remote.hw_item])
+    if out:
+        return await call.answer(l.f(out))
     await call.answer()
 
 
@@ -576,7 +737,7 @@ async def run_remote_cycle(userid: int):
             break
 
         # waiting until editing message
-        await asyncio.sleep(1.05)
+        await asyncio.sleep(1.1)
         mg.remote_tick(user, remote)
 
         # getting new message contents
@@ -637,7 +798,13 @@ async def remote(msg: types.Message):
 
     mg.remotes[msg.from_user.id].message = botmsg
     mg.broadcast_user('chat_user_joined', msg.from_user.id)
-    await run_remote_cycle(msg.from_user.id)
+    try:
+        await run_remote_cycle(msg.from_user.id)
+    except Exception as e:
+        mg.broadcast_user('chat_user_left', msg.from_user.id)
+        log(f'{user.game_name} ({user.id}) logged out due to an error: {e}', level=ERROR)
+        await botmsg.edit_text(l.f(f'remote_error', error=e))
+
     del mg.remotes[msg.from_user.id]
 
 
@@ -649,18 +816,11 @@ async def status(msg: types.Message):
     user = mg.get_user(msg.from_user)
     l = mg.get_locale(user.lang)
 
-    text = l.f('status_text')+'\n\n'
+    if user.id in mg.remotes:
+        await msg.delete()
+        return
 
-    if len(mg.remotes) == 0:
-        text += l.f('status_desc_no_players_online')
-    else:
-        text += l.f('status_desc_players_online', online=len(mg.remotes))
-
-        for i in mg.remotes.values():
-            user = mg.get_user(i.user_id)
-            text += f'\n•  {user.display_name}'
-
-    await msg.reply(text)
+    await msg.reply(get_server_status_text(l))
 
 
 @dp.message(Command('logout'))
@@ -693,7 +853,7 @@ async def ingamechat(msg: types.Message):
 
     await msg.delete()
 
-    if msg.text.startswith('φ'): return
+    if msg.text.startswith(l.f('@')): return
     remote = mg.remotes[msg.from_user.id]
     if remote.daydreaming: return
 
