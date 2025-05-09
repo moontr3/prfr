@@ -127,6 +127,8 @@ async def inline(q: types.InlineQuery):
         )]
 
         for index, i in enumerate(items):
+            index = i[1]
+            i = i[0]
             gives = mg.item.get(i.gives)
 
             if len(i.requires) > 1:

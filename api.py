@@ -437,18 +437,19 @@ class RecipeLib:
         self.data: List[Recipe] = [Recipe(v) for v in data]
 
 
-    def get_craftable(self, inv: Dict[str, int]) -> List[Recipe]:
+    def get_craftable(self, inv: Dict[str, int]) -> List[Tuple[Recipe, int]]:
         '''
         Searches recipes and only returns the ones that are craftable
         with the passed in inventory.
         '''
         out = []
 
-        for i in self.data:
+        for index, i in enumerate(self.data):
             for key, amount in i.requires.items():
-                if key in inv and inv[key] >= amount:
-                    out.append(i)
+                if key not in inv or inv[key] < amount:
                     break
+            else:
+                out.append((i, index))
                 
         return out
 

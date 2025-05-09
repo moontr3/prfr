@@ -162,6 +162,54 @@
             "color": [150, 109, 90],
             "drops": [ {"item": "door"} ],
             "durability": 10
+        },
+        "cactus": {
+            "emoji": "🌵",
+            "color": [74, 102, 24],
+            "drops": [ {"item": "cactus"} ],
+            "durability": 1
+        },
+        "rose": {
+            "emoji": "🌹",
+            "color": [140, 11, 11],
+            "drops": [ {"item": "rose"} ],
+            "durability": 1
+        },
+        "hyacinth": {
+            "emoji": "🪻",
+            "color": [111, 28, 163],
+            "drops": [ {"item": "hyacinth"} ],
+            "durability": 1
+        },
+        "chamomile": {
+            "emoji": "🌼",
+            "color": [229, 235, 66],
+            "drops": [ {"item": "chamomile"} ],
+            "durability": 1
+        },
+        "hibiscus": {
+            "emoji": "🌺",
+            "color": [224, 56, 219],
+            "drops": [ {"item": "hibiscus"} ],
+            "durability": 1
+        },
+        "sunflower": {
+            "emoji": "🌻",
+            "color": [115, 86, 48],
+            "drops": [ {"item": "sunflower"} ],
+            "durability": 1
+        },
+        "fireflower": {
+            "emoji": "🏵",
+            "color": [255, 102, 0],
+            "drops": [ {"item": "fireflower"} ],
+            "durability": 1
+        },
+        "stone_block": {
+            "emoji": "⬜",
+            "color": [210, 210, 210],
+            "drops": [ {"item": "stone_block"} ],
+            "durability": 20
         }
     },
     "item": {
@@ -257,6 +305,109 @@
             "emoji": "🚪",
             "weight": 7,
             "block": "door"
+        },
+        "cactus": {
+            "emoji": "🌵",
+            "weight": 3,
+            "block": "cactus"
+        },
+        "rose": {
+            "emoji": "🌹",
+            "weight": 1,
+            "block": "rose"
+        },
+        "hyacinth": {
+            "emoji": "🪻",
+            "weight": 1,
+            "block": "hyacinth"
+        },
+        "chamomile": {
+            "emoji": "🌼",
+            "weight": 1,
+            "block": "chamomile"
+        },
+        "hibiscus": {
+            "emoji": "🌺",
+            "weight": 1,
+            "block": "hibiscus"
+        },
+        "sunflower": {
+            "emoji": "🌻",
+            "weight": 1,
+            "block": "sunflower"
+        },
+        "fireflower": {
+            "emoji": "🏵",
+            "weight": 1,
+            "block": "fireflower"
+        },
+        "red": {
+            "emoji": "❤",
+            "weight": 0
+        },
+        "orange": {
+            "emoji": "🧡",
+            "weight": 0
+        },
+        "yellow": {
+            "emoji": "💛",
+            "weight": 0
+        },
+        "green": {
+            "emoji": "💚",
+            "weight": 0
+        },
+        "blue": {
+            "emoji": "💙",
+            "weight": 0
+        },
+        "purple": {
+            "emoji": "💜",
+            "weight": 0
+        },
+        "brown": {
+            "emoji": "🤎",
+            "weight": 0
+        },
+        "red_wood": {
+            "emoji": "🟥",
+            "weight": 5,
+            "block": "red_wood"
+        },
+        "orange_wood": {
+            "emoji": "🟧",
+            "weight": 5,
+            "block": "orange_wood"
+        },
+        "yellow_wood": {
+            "emoji": "🟨",
+            "weight": 5,
+            "block": "yellow_wood"
+        },
+        "green_wood": {
+            "emoji": "🟩",
+            "weight": 5,
+            "block": "green_wood"
+        },
+        "blue_wood": {
+            "emoji": "🟦",
+            "weight": 5,
+            "block": "blue_wood"
+        },
+        "purple_wood": {
+            "emoji": "🟪",
+            "weight": 5,
+            "block": "purple_wood"
+        },
+        "brown_wood": {
+            "emoji": "🟫",
+            "weight": 5,
+            "block": "brown_wood"
+        },
+        "stone_block": {
+            "emoji": "⬜",
+            "weight": 15,
+            "block": "stone_block"
         }
     },
     "recipes": [
@@ -274,8 +425,82 @@
         {
             "req": { "stick": 2, "wood_block": 1 },
             "gives": "door",
-            "amount": 1,
             "energy": 5
+        },
+        {
+            "req": { "stone": 3 },
+            "gives": "stone_block",
+            "energy": 2
+        },
+        {
+            "req": { "rose": 1 },
+            "gives": "red",
+            "energy": 1
+        },
+        {
+            "req": { "fireflowr": 1 },
+            "gives": "orange",
+            "energy": 1
+        },
+        {
+            "req": { "chamomile": 1 },
+            "gives": "yellow",
+            "energy": 1
+        },
+        {
+            "req": { "cactus": 1 },
+            "gives": "green",
+            "energy": 1
+        },
+        {
+            "req": { "hyacinth": 1 },
+            "gives": "blue",
+            "energy": 1
+        },
+        {
+            "req": { "hibiscus": 1 },
+            "gives": "purple",
+            "energy": 1
+        },
+        {
+            "req": { "sunflower": 1 },
+            "gives": "brown",
+            "energy": 1
+        },
+        {
+            "req": { "red": 1, "wood_block": 1 },
+            "gives": "red_wood",
+            "energy": 2
+        },
+        {
+            "req": { "orange": 1, "wood_block": 1 },
+            "gives": "orange_wood",
+            "energy": 2
+        },
+        {
+            "req": { "yellow": 1, "wood_block": 1 },
+            "gives": "yellow_wood",
+            "energy": 2
+        },
+        {
+            "req": { "green": 1, "wood_block": 1 },
+            "gives": "green_wood",
+            "energy": 2
+        },
+        {
+            "req": { "blue": 1, "wood_block": 1 },
+            "gives": "blue_wood",
+            "energy": 2
+        },
+        {
+            "req": { "purple": 1, "wood_block": 1 },
+            "gives": "purple_wood",
+            "energy": 2
+        },
+        {
+            "req": { "brown": 1, "wood_block": 1 },
+            "gives": "brown_wood",
+            "energy": 2
         }
     ]
 }
